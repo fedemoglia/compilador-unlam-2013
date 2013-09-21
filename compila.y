@@ -13,12 +13,12 @@ programa :
 %%
 
 int yyparse();
-//int yylex();
+int yylex();
 
 int main() {
 	printf("LA");
 	return 0;
-	//yyparse();
+	yyparse();
 }   
   
 int yylex() {
