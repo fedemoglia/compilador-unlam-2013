@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <ctype.h>
+#include <conio.h>
 #include <stdlib.h> 
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
@@ -208,6 +209,9 @@ int yylex()	{
 	while (estado != estadoFinal) {
 		caracterLeido = getc(fuente);
 		columna = determinarColumna(caracterLeido); 
+		if(columna==-1) {
+			return 1;	// Error
+		}
 		estado = matrizTransicion[estado][columna];
 	}
 
