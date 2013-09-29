@@ -103,20 +103,87 @@ CONST_ENTERA;
 
 
 
+int CANTIDAD_ESTADOS=24;
+int tipo_token;
+int estado;
+char caracter_leido;
+FILE *fuente;
 
 int yyparse();
 int yylex();
 
 int main() {
-	printf("LA");
-	return 0;
+	char[20] input;
+	printf("Ingrese archivo fuente: ");
+	scanf("%s",&input);
+  
+	if( !(fuente = fopen(input,"rb+") ) ) {
+		printf("Error de apertura del archivo fuente...");
+		getch();
+		exit(0);
+    }
+  
 	yyparse();
 }   
   
-int yylex() {
-	return 1;
-}
 
 int yyerror(char *s) {
-	printf("EEERRR %s\n", s);
+	printf("%s\n", s);
 }
+
+int matrizTransicion[CANTIDAD_ESTADOS][CARACTERES]; // LLENARLA!
+
+int obtenerColumna(char c)
+  {
+  int columna;
+  if(isalpha(c)) columna=0;
+  if(isdigit(c)) columna=1;
+  
+  switch(c)
+    {
+    case '.': columna=2;break;
+    case '"': columna=3; break;
+    case ':': columna=4; break;
+    case '+': columna=5; break;
+    case '-': columna=6; break;
+    case '*': columna=7; break;
+    case '/': columna=8; break;
+    case '<': columna=9; break;
+    case '>': columna=10; break;
+    case '=': columna=11; break;
+    case '!': columna=12; break;
+    case '(': columna=13; break;
+    case ')': columna=14; break;
+    case '#': columna=15; break;
+	
+	/* Saltos de línea */
+	case '\n': columna=16; linea++; break;
+    case '\r': columna=16; break;
+	
+	/* Eliminado de espacios */
+    case '\t': columna=17; break;
+    case ' ': columna=17; break;
+	
+    case EOF: columna=18; break;
+	default: columna=24; break;
+    }
+  return columna;  
+  }
+
+
+int yylex()
+  { 
+  cant=0;
+  estado = 0;
+  int estado_final  = CANTIDAD_ESTADOS;
+  int columna;
+        
+  while (estado != estado_final)
+    {
+		caracter_leido=getc(fuente);
+		columna = determinarColumna(caracter_leido); 
+		estado = matrizTransicion[estado][columna];
+    }
+
+	return 0; // TODO ! 
+  }   
