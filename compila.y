@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <conio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
 %}
@@ -10,7 +10,7 @@
 /* Tokens - Reglas AL */
 %token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_GRUPO_VARIABLES
 %token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO OP_ASIGNACION
-%token OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION  
+%token OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
 %token P_ABRE P_CIERRE I_CONDICIONAL I_FINCONDICIONAL I_BUCLE I_FINBUCLE
 %token I_PROG I_FINPROG INI_FUNCION FIN_FUNCION
 %token TIPO_DATO
@@ -22,11 +22,11 @@
 SEPARADOR_DEC 	:	:;
 FIN_DEC	:	ENDEC;
 SEPARADOR_GRUPO_VARIABLES 	:	,;
-OP_COMPARACION	:	< | 
-> | 
-<= | 
->= | 
-!= | 
+OP_COMPARACION	:	< |
+> |
+<= |
+>= |
+!= |
 == ;
 OP_LOGICO_PRE	:	NOT;
 OP_LOGICO	:	AND |
@@ -43,7 +43,7 @@ I_FINCONDICIONAL	:	ENDIF;
 I_BUCLE	:	WHILE;
 I_FINBUCLE	:	ENDWHILE;
 I_PROG_PRINCIPAL	:	MAIN;
-I_FIN_PROG_PRINCIPAL	:	ENDMAIN; 
+I_FIN_PROG_PRINCIPAL	:	ENDMAIN;
 I_FINPROG	:	END;
 I_PROG	:	BEGIN;
 I_FINPROG	:	END;
@@ -52,7 +52,7 @@ FIN_FUNCION	:	RETURN;
 TIPO_DATO	:	REAL | INT;
 ID_VAR	: 	:	letra | letra cadena_str;
 INST_IMPRIMIR	:	PRINT;
-cadena_str	:	caracter | 
+cadena_str	:	caracter |
 cadena_str caracter;
 caracter	:	letra | numero | caracter_especial;
 letra		:	a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z |
@@ -66,7 +66,7 @@ numero		:	0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 /* Reglas AS */
 %%
-PRG	: I_PROG  bloque_principal lista_funciones I_FINPROG | 
+PRG	: I_PROG  bloque_principal lista_funciones I_FINPROG |
  I_PROG  bloque_principal I_FINPROG ;
 lista_funciones    :    funcion | lista_funciones funcion;
 bloque_principal    :    I_PROG_PRINCIPAL bloque I_FIN_PROG_PRINCIPAL ;
@@ -83,7 +83,7 @@ sentencia	:	asignacion |
 			output;
 grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_GRUPO_VARIABLES grupo_variables;
 asignacion	:	ID_VAR OP_ASIGNACION mult_asignacion;
-mult_asignacion	:	expresion | expresion OP_ASIGNACION mult_asignacion; 
+mult_asignacion	:	expresion | expresion OP_ASIGNACION mult_asignacion;
 expresion	:	termino | expresion OP_SUMA termino | expresion OP_RESTA termino ;
 termino	:	factor | termino OP_MULTIPLICACION factor | termino OP_DIVISION factor;
 factor	:	P_ABRE expresion P_CIERRE | constante_numerica | ID_VAR | CONST_STRING;
@@ -98,7 +98,7 @@ cadena_caracteres 	:	CONST_STRING | ID_VAR;
 elemento	:	CONST_STRING |
 constante_numerica |
 ID_VAR;
-constante_numerica	:	CONST_REAL | 	
+constante_numerica	:	CONST_REAL |
 CONST_ENTERA;
 %%
 
@@ -116,13 +116,13 @@ int main() {
 	char input[20];
 	printf("Ingrese archivo fuente: ");
 	scanf("%s",&input);
-  
+
 	if( !(fuente = fopen(input,"rb+") ) ) {
 		printf("Error de apertura del archivo fuente...");
 		getch();
 		exit(0);
     }
-  
+
 	/* Esto es para probar*/
     /*
     while (!feof(fuente)) {
@@ -131,7 +131,7 @@ int main() {
     */
     yyparse();
     fclose(fuente);
-}   
+}
 
 int yyerror(char *s) {
 	printf("%s\n", s);
@@ -162,13 +162,13 @@ int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
 	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
 	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,23,24,24,24},
 	{23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,23}
-}; 
+};
 
 int determinarColumna(char c) {
-	int columna;
+	int columna=-1;
 	if(isalpha(c)) columna=0;
 	if(isdigit(c)) columna=1;
-  
+
 	switch(c) {
 		case '.': columna=2;break;
 		case '"': columna=3; break;
@@ -184,36 +184,35 @@ int determinarColumna(char c) {
 		case '(': columna=13; break;
 		case ')': columna=14; break;
 		case '#': columna=15; break;
-		
+
 		/* Saltos de línea */
 		case '\n': columna=16; linea++; break;
 		case '\r': columna=16; break;
-		
+
 		/* Eliminado de espacios */
 		case '\t': columna=17; break;
 		case ' ': columna=17; break;
-		
+
 		case EOF: columna=18; break;
-		default: columna=24; break;
 	}
-	return columna;  
+	return columna;
 }
 
 
-int yylex()	{ 
+int yylex()	{
 	int cant=0;
 	estado = 0;
 	int estadoFinal  = CANTIDAD_ESTADOS;
 	int columna;
-        
+
 	while (estado != estadoFinal) {
 		caracterLeido = getc(fuente);
-		columna = determinarColumna(caracterLeido); 
+		columna = determinarColumna(caracterLeido);
 		if(columna==-1) {
 			return 1;	// Error
 		}
 		estado = matrizTransicion[estado][columna];
 	}
 
-	return 0; // TODO ! 
-}   
+	return 0; // TODO !
+}
