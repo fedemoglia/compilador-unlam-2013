@@ -104,6 +104,7 @@ CONST_ENTERA;
 
 /***** VARIABLES GLOBALES *****/
 int tokenIdentificado;
+char tokenChar;
 int estado;
 char caracterLeido;
 FILE *fuente;
@@ -147,12 +148,11 @@ int main() {
     }
 
 	/* Esto es para probar*/
-    /*
     while (!feof(fuente)) {
-        yylex();
+        printf("Token identificado: %d\n", yylex());
     }
-    */
-    yyparse();
+	
+    //yyparse();
     fclose(fuente);
 }
 
@@ -264,6 +264,7 @@ int yylex()	{
 		(*proceso[estado][columna])();
 		estado = matrizTransicion[estado][columna];
 	}
+	ungetc(caracterLeido, fuente);
 
 	return tokenIdentificado;
 }
