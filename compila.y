@@ -152,7 +152,7 @@ int main() {
         printf("Token identificado: %d\n", yylex());
     }
 	
-    //yyparse();
+    yyparse();
     fclose(fuente);
 }
 
@@ -190,7 +190,7 @@ int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
 void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
 	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,nada,nada,nada},
 	{contId,contId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId},
-	{finCteEntera,contCte,finCteReal,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
+	{finCteEntera,contCte,nada,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
 	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
 	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
 	{contCadena,contCadena,contCadena,finCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,error},
@@ -289,7 +289,7 @@ void contId() {
 }
 
 void finId() {
-
+	tokenIdentificado = ID_VAR;
 }
 
 void initCte() {
@@ -301,11 +301,11 @@ void contCte() {
 }
 
 void finCteEntera() {
-
+	tokenIdentificado = CONST_ENTERA;
 }
 
 void finCteReal() {
-
+	tokenIdentificado = CONST_REAL;
 }
 
 void initCadena() {
@@ -317,7 +317,7 @@ void contCadena() {
 }
 
 void finCadena() {
-
+	tokenIdentificado = CONST_STRING;
 }
 
 void separadorDec() {
