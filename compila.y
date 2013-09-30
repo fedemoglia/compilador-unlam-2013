@@ -103,7 +103,7 @@ CONST_ENTERA;
 %%
 
 /***** VARIABLES GLOBALES *****/
-int tipo_token;
+int tokenIdentificado;
 int estado;
 char caracterLeido;
 FILE *fuente;
@@ -111,6 +111,29 @@ int linea = 0;
 
 int yyparse();
 int yylex();
+
+void error();
+void nada();
+void initId();
+void contId();
+void finId();
+void initCte();
+void contCte();
+void finCteEntera();
+void finCteReal();
+void initCadena();
+void contCadena();
+void finCadena();
+void separadorDec();
+void parentesisAbre();
+void parentesisCierra();
+void opSuma();
+void opResta();
+void opMultiplicacion();
+void opDivision();
+void opComparacion();
+void opAsignacion();
+void opSuma();
 
 int main() {
 	char input[20];
@@ -160,8 +183,35 @@ int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
 	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
 	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
 	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,23,24,24,24},
-	{23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,23}
+	{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,23,-1,-1,-1},
+	{23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,23},
+};
+
+void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
+	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,nada,nada,nada},
+	{contId,contId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId},
+	{finCteEntera,contCte,finCteReal,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
+	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
+	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
+	{contCadena,contCadena,contCadena,finCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,error},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{error,error,error,error,error,error,error,error,error,error,error,opComparacion,error,error,error,error,error,error,error},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{error,error,error,error,error,error,error,error,error,error,error,error,error,error,error,nada,error,error,error},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
 };
 
 int determinarColumna(char c) {
@@ -211,8 +261,96 @@ int yylex()	{
 		if(columna==-1) {
 			return 1;	// Error
 		}
+		(*proceso[estado][columna])();
 		estado = matrizTransicion[estado][columna];
 	}
 
-	return 0; // TODO !
+	return tokenIdentificado;
+}
+
+
+/* Funciones léxicas */
+
+void error() {
+    printf("Error léxico: se esperaba otro caracter\n\n");
+    system("PAUSE");
+    exit(1);
+}
+
+void nada() {}
+
+void initId() {
+
+}
+
+void contId() {
+
+}
+
+void finId() {
+
+}
+
+void initCte() {
+
+}
+
+void contCte() {
+
+}
+
+void finCteEntera() {
+
+}
+
+void finCteReal() {
+
+}
+
+void initCadena() {
+
+}
+
+void contCadena() {
+
+}
+
+void finCadena() {
+
+}
+
+void separadorDec() {
+	tokenIdentificado = SEPARADOR_DEC;
+}
+
+void parentesisAbre() {
+	tokenIdentificado = P_ABRE;
+}
+
+void parentesisCierra() {
+	tokenIdentificado = P_CIERRE;
+}
+
+void opSuma() {
+	tokenIdentificado = OP_SUMA;
+}
+
+void opResta() {
+	tokenIdentificado = OP_RESTA;
+}
+
+void opMultiplicacion() {
+	tokenIdentificado = OP_MULTIPLICACION;
+}
+
+void opDivision() {
+	tokenIdentificado = OP_DIVISION;
+}
+
+void opComparacion() {
+	tokenIdentificado = OP_COMPARACION;
+}
+
+void opAsignacion() {
+	tokenIdentificado = OP_ASIGNACION;
 }
