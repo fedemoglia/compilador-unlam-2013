@@ -153,6 +153,7 @@ int main() {
     }
 	
     yyparse();
+	system("PAUSE");
     fclose(fuente);
 }
 
