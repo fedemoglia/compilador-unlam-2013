@@ -7,7 +7,7 @@
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
-#define CANT_PALABRAS_RESERVADAS 14
+#define CANT_PALABRAS_RESERVADAS 16
 %}
 
 /* Tokens - Reglas AL */
@@ -237,7 +237,9 @@ char palabrasReservadas[CANT_PALABRAS_RESERVADAS][20] = {
 	"and",
 	"or",
 	"endif",
-	"endwhile"
+	"endwhile",
+	"print",
+	"percent"
 	};
 
 int determinarColumna(char c) {
@@ -322,7 +324,8 @@ void nada() {}
 
 void limpiarEspacioPalabraLeida() {
 	indiceLetraPalabraLeida=0;
-	for(int i=0; i<LARGO_MAXIMO_NOMBRE_TOKEN; i++) {
+	int i=0;
+	for(i=0; i<LARGO_MAXIMO_NOMBRE_TOKEN; i++) {
 		palabraLeida[i]=0;
 		}
 }
