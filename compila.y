@@ -3,8 +3,11 @@
 #include <ctype.h>
 #include <conio.h>
 #include <stdlib.h>
+#include <string.h>
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
+#define LARGO_MAXIMO_NOMBRE_TOKEN 20
+#define CANT_PALABRAS_RESERVADAS 14
 %}
 
 /* Tokens - Reglas AL */
@@ -105,10 +108,13 @@ CONST_ENTERA;
 /***** VARIABLES GLOBALES *****/
 int tokenIdentificado;
 char tokenChar;
+char palabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN]; int indiceLetraPalabraLeida;
 int estado;
 char caracterLeido;
 FILE *fuente;
 int linea = 0;
+
+char modoDebug='n';
 
 int yyparse();
 int yylex();
@@ -146,6 +152,8 @@ int main() {
 		getch();
 		exit(0);
     }
+	printf("Modo Debug? (y/n)");
+	modoDebug = getch();
 
 	/* Esto es para probar*/
     while (!feof(fuente)) {
@@ -185,7 +193,7 @@ int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
 	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
 	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
 	{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,23,-1,-1,-1},
-	{23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,23},
+	{23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,0},
 };
 
 void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
@@ -214,6 +222,23 @@ void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
 	{error,error,error,error,error,error,error,error,error,error,error,error,error,error,error,nada,error,error,error},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
 };
+
+char palabrasReservadas[CANT_PALABRAS_RESERVADAS][20] = {
+	"main",
+	"endmain",
+	"begin",
+	"end",
+	"dec",
+	"entero",
+	"real",
+	"string",
+	"if",
+	"while",
+	"and",
+	"or",
+	"endif",
+	"endwhile"
+	};
 
 int determinarColumna(char c) {
 	int columna=-1;
@@ -270,6 +295,20 @@ int yylex()	{
 	return tokenIdentificado;
 }
 
+int verificarPalabraReservada(char *c)
+{
+    int i;
+    for(i=0;i<CANT_PALABRAS_RESERVADAS;i++)
+    {
+        if(!strcmp(palabrasReservadas[i],c))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
 
 /* Funciones léxicas */
 
@@ -281,16 +320,37 @@ void error() {
 
 void nada() {}
 
-void initId() {
+void limpiarEspacioPalabraLeida() {
+	indiceLetraPalabraLeida=0;
+	for(int i=0; i<LARGO_MAXIMO_NOMBRE_TOKEN; i++) {
+		palabraLeida[i]=0;
+		}
+}
 
+void initId() {
+	limpiarEspacioPalabraLeida();
+	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
+	if(modoDebug=='y') {
+	printf("INFO initId: Letra Leida %c, Palabra Leída (temporal) %s\n",caracterLeido,palabraLeida);
+	}
 }
 
 void contId() {
-
+	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
+	if(modoDebug=='y') {
+	printf("INFO contId: Letra Leida %c, Palabra Leída (temporal) %s\n",caracterLeido,palabraLeida);
+	}
 }
 
 void finId() {
 	tokenIdentificado = ID_VAR;
+	
+	
+	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
+	if(modoDebug=='y') {
+	printf("INFO finId: Palabra Leída %s, indice %d\n",palabraLeida, indicePalabraReservada);
+	}
+	
 }
 
 void initCte() {
