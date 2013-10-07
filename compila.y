@@ -299,10 +299,10 @@ int yylex()	{
 
 int verificarPalabraReservada(char *c)
 {
-    int i;
-    for(i=0;i<CANT_PALABRAS_RESERVADAS;i++)
+    int i=0;
+    while(i<CANT_PALABRAS_RESERVADAS)
     {
-        if(!strcmp(palabrasReservadas[i],c))
+        if(!strcmp(palabrasReservadas[i++],c))
         {
             return i;
         }
@@ -325,8 +325,8 @@ void nada() {}
 void limpiarEspacioPalabraLeida() {
 	indiceLetraPalabraLeida=0;
 	int i=0;
-	for(i=0; i<LARGO_MAXIMO_NOMBRE_TOKEN; i++) {
-		palabraLeida[i]=0;
+	while(i<LARGO_MAXIMO_NOMBRE_TOKEN) {
+		palabraLeida[i++]=0;
 		}
 }
 
