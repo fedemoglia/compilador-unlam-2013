@@ -358,12 +358,25 @@ void contId() {
 	}
 }
 
+int enModoDebug() {
+	return modoDebug=='y'?1:-1;
+}
+
 void finId() {
 	tokenIdentificado = ID_VAR;
 
 	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
 	if(modoDebug=='y') {
 		printf("INFO finId: Palabra Leída %s, indice %d\n",palabraLeida, indicePalabraReservada);
+	}
+	
+	// si NO es una palabra reservada
+	if(indicePalabraReservada== -1) {
+		// FIXME Habría que cambiar el ambito que está fijado
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
+		if(modoDebug=='y') {
+			printf("Indice de tabla de símbolos: %d\n",indicePalabraEnTablaDeSimbolos);
+		}
 	}
 	
 }
