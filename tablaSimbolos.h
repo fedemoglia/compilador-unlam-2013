@@ -16,6 +16,7 @@ int buscarEnTS(char* ambito, char* nombre, struct elementoTablaSimbolos * tablaS
 		if(strcmp(elemento.ambito,ambito)==0 && strcmp(elemento.nombre,nombre)==0 && elemento.eliminado==0) {
 			return i;
 		}
+		i++;
 	}
 
 	return -1;
