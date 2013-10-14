@@ -4,6 +4,7 @@
 #include <conio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "tablaSimbolos.h"
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
@@ -142,10 +143,19 @@ void opComparacion();
 void opAsignacion();
 void opSuma();
 
-int main() {
+
+int cantidadElementosTablaSimbolos=0;
+struct elementoTablaSimbolos tablaSimbolos[1000];
+
+int main(int argc, char *argv[]) {
 	char input[20];
-	printf("Ingrese archivo fuente: ");
-	scanf("%s",&input);
+	if(argc<2) {
+		printf("Ingrese archivo fuente: ");
+		scanf("%s",&input);
+	}
+	else {
+		strcpy(input,argv[1]);
+	}
 
 	if( !(fuente = fopen(input,"rb+") ) ) {
 		printf("Error de apertura del archivo fuente...");
@@ -154,11 +164,14 @@ int main() {
     }
 	printf("Modo Debug? (y/n)");
 	modoDebug = getch();
+	printf("\n");
 
-	/* Esto es para probar*/
+	/* Esto es para probar */
+	
     while (!feof(fuente)) {
         printf("Token identificado: %d\n", yylex());
     }
+	
 	
     yyparse();
 	system("PAUSE");
@@ -347,11 +360,10 @@ void contId() {
 
 void finId() {
 	tokenIdentificado = ID_VAR;
-	
-	
+
 	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
 	if(modoDebug=='y') {
-	printf("INFO finId: Palabra Leída %s, indice %d\n",palabraLeida, indicePalabraReservada);
+		printf("INFO finId: Palabra Leída %s, indice %d\n",palabraLeida, indicePalabraReservada);
 	}
 	
 }
