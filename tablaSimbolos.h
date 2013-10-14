@@ -19,7 +19,13 @@ int buscarEnTS(char* ambito, char* nombre, struct elementoTablaSimbolos * tablaS
 		i++;
 	}
 
-	return -1;
+	if(strcmp(ambito,"main")==0) {
+		return -1;
+	}
+	else {
+		// recursividad para volver a llamar a la funcion para buscar en el ambito main, si se estaba en una funcion.
+		return buscarEnTS("main",nombre,tablaSimbolos,largoTablaSimbolos);
+	}
 }
 
 int agregarEnTS(char * ambito, char tipo, char * nombre, void * valor, struct elementoTablaSimbolos * tablaSimbolos, int cantidadElementosTablaSimbolos) {
