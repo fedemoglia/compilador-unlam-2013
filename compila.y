@@ -8,7 +8,7 @@
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
-#define CANT_PALABRAS_RESERVADAS 16
+#define CANT_PALABRAS_RESERVADAS 19
 %}
 
 /* Tokens - Reglas AL */
@@ -48,7 +48,6 @@ I_BUCLE	:	WHILE;
 I_FINBUCLE	:	ENDWHILE;
 I_PROG_PRINCIPAL	:	MAIN;
 I_FIN_PROG_PRINCIPAL	:	ENDMAIN;
-I_FINPROG	:	END;
 I_PROG	:	BEGIN;
 I_FINPROG	:	END;
 INI_FUNCION	:	FUNCTION;
@@ -78,7 +77,7 @@ bloque	:	lista_sentencias | declaracion lista_sentencias;
 
 lista_sentencias : sentencia | lista_sentencias sentencia;
 
-declaracion	:	OP_DECLARACION TIPO_DATO SEPARADOR_DEC grupo_variables FIN_DEC;
+declaracion	:	OP_DECLARACION TIPO_DATO grupo_variables FIN_DEC;
 funcion	:	INI_FUNCION declaracion_funcion bloque FIN_FUNCION;
 declaracion_funcion	:	ID_VAR SEPARADOR_DEC TIPO_DATO;
 sentencia	:	asignacion |
@@ -167,12 +166,12 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 
 	/* Esto es para probar */
-	
+
     while (!feof(fuente)) {
         printf("Token identificado: %d\n", yylex());
     }
-	
-	
+
+
     yyparse();
 	system("PAUSE");
     fclose(fuente);
@@ -242,7 +241,10 @@ char palabrasReservadas[CANT_PALABRAS_RESERVADAS][20] = {
 	"begin",
 	"end",
 	"dec",
-	"entero",
+	"endec",
+	"function",
+	"return",
+	"int",
 	"real",
 	"string",
 	"if",
@@ -369,7 +371,7 @@ void finId() {
 	if(modoDebug=='y') {
 		printf("INFO finId: Palabra Leída %s, indice %d\n",palabraLeida, indicePalabraReservada);
 	}
-	
+
 	// si NO es una palabra reservada
 	if(indicePalabraReservada== -1) {
 		// FIXME Habría que cambiar el ambito que está fijado
@@ -378,7 +380,7 @@ void finId() {
 			printf("Indice de tabla de símbolos: %d\n",indicePalabraEnTablaDeSimbolos);
 		}
 	}
-	
+
 }
 
 void initCte() {
