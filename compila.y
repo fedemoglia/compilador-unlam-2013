@@ -8,20 +8,20 @@
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
-#define CANT_PALABRAS_RESERVADAS 19
+#define CANT_PALABRAS_RESERVADAS 20
 %}
 
 /* Tokens - Reglas AL */
 %token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_GRUPO_VARIABLES
-%token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO OP_ASIGNACION
+%token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR OP_ASIGNACION
 %token OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
 %token P_ABRE P_CIERRE I_CONDICIONAL I_FINCONDICIONAL I_BUCLE I_FINBUCLE
 %token I_PROG I_FINPROG INI_FUNCION FIN_FUNCION
-%token TIPO_DATO
+%token TIPO_DATO_INT TIPO_DATO_REAL TIPO_DATO_STRING
 %token ID_VAR
 %token CONST_STRING CONST_REAL CONST_ENTERA
 %token I_PROG_PRINCIPAL I_FIN_PROG_PRINCIPAL
-%token INST_IMPRIMIR
+%token INST_IMPRIMIR PORCENTAJE
 /*OP_DECLARACION	:	DEC;
 SEPARADOR_DEC 	:	:;
 FIN_DEC	:	ENDEC;
@@ -77,9 +77,10 @@ bloque	:	lista_sentencias | declaracion lista_sentencias;
 
 lista_sentencias : sentencia | lista_sentencias sentencia;
 
-declaracion	:	OP_DECLARACION TIPO_DATO grupo_variables FIN_DEC;
+declaracion	:	OP_DECLARACION tipo grupo_variables FIN_DEC;
+tipo	: 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
 funcion	:	INI_FUNCION declaracion_funcion bloque FIN_FUNCION;
-declaracion_funcion	:	ID_VAR SEPARADOR_DEC TIPO_DATO;
+declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
 sentencia	:	asignacion |
 			condicional |
 			bucle |
@@ -93,7 +94,8 @@ factor	:	P_ABRE expresion P_CIERRE | constante_numerica | ID_VAR | CONST_STRING;
 bucle	:	I_BUCLE condicion bloque I_FINBUCLE;
 condicional	:	I_CONDICIONAL condicion bloque I_FINCONDICIONAL ;
 condicion	:	P_ABRE comparacion P_CIERRE |
-			P_ABRE comparacion OP_LOGICO comparacion P_CIERRE ;
+			P_ABRE comparacion operador comparacion P_CIERRE ;
+operador	: 	OP_LOGICO_AND | OP_LOGICO_OR;
 comparacion	:	elemento OP_COMPARACION elemento  |
 OP_LOGICO_PRE elemento OP_COMPARACION elemento;
 output		:	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE;
@@ -141,6 +143,7 @@ void opDivision();
 void opComparacion();
 void opAsignacion();
 void opSuma();
+void finArch();
 
 
 int cantidadElementosTablaSimbolos=0;
@@ -209,7 +212,7 @@ int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
 };
 
 void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
-	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,nada,nada,nada},
+	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,nada,nada,finArch},
 	{contId,contId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId},
 	{finCteEntera,contCte,nada,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
 	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
@@ -235,27 +238,31 @@ void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
 };
 
-char palabrasReservadas[CANT_PALABRAS_RESERVADAS][20] = {
-	"main",
-	"endmain",
-	"begin",
-	"end",
-	"dec",
-	"endec",
-	"function",
-	"return",
-	"int",
-	"real",
-	"string",
-	"if",
-	"while",
-	"and",
-	"or",
-	"endif",
-	"endwhile",
-	"print",
-	"percent"
-	};
+struct {
+	char palabra[20];
+	int valor;
+} palabrasReservadas[CANT_PALABRAS_RESERVADAS] = {
+	"main", I_PROG_PRINCIPAL,
+	"endmain", I_FIN_PROG_PRINCIPAL,
+	"begin", I_PROG,
+	"end", I_FINPROG,
+	"dec", OP_DECLARACION,
+	"endec", FIN_DEC,
+	"function", INI_FUNCION,
+	"return", FIN_FUNCION,
+	"int", TIPO_DATO_INT,
+	"real", TIPO_DATO_REAL,
+	"string", TIPO_DATO_STRING,
+	"if", I_CONDICIONAL,
+	"endif", I_FINCONDICIONAL,
+	"while", I_BUCLE,
+	"endwhile", I_FINBUCLE,
+	"not", OP_LOGICO_PRE,
+	"and", OP_LOGICO_AND,
+	"or", OP_LOGICO_OR,
+	"print", INST_IMPRIMIR,
+	"percent", PORCENTAJE
+};
 
 int determinarColumna(char c) {
 	int columna=-1;
@@ -317,7 +324,7 @@ int verificarPalabraReservada(char *c)
     int i=0;
     while(i<CANT_PALABRAS_RESERVADAS)
     {
-        if(!strcmp(palabrasReservadas[i++],c))
+        if(!strcmp(palabrasReservadas[i++].palabra,c))
         {
             return i;
         }
@@ -365,22 +372,22 @@ int enModoDebug() {
 }
 
 void finId() {
-	tokenIdentificado = ID_VAR;
-
 	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
 	if(modoDebug=='y') {
 		printf("INFO finId: Palabra Leída %s, indice %d\n",palabraLeida, indicePalabraReservada);
 	}
 
 	// si NO es una palabra reservada
-	if(indicePalabraReservada== -1) {
+	if(indicePalabraReservada == -1) {
 		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
 		if(modoDebug=='y') {
 			printf("Indice de tabla de símbolos: %d\n",indicePalabraEnTablaDeSimbolos);
 		}
+		tokenIdentificado = ID_VAR;
+	} else {
+		tokenIdentificado = palabrasReservadas[indicePalabraReservada-1].valor;
 	}
-
 }
 
 void initCte() {
@@ -445,4 +452,8 @@ void opComparacion() {
 
 void opAsignacion() {
 	tokenIdentificado = OP_ASIGNACION;
+}
+
+void finArch() {
+	tokenIdentificado = 0;
 }
