@@ -170,10 +170,10 @@ int main(int argc, char *argv[]) {
 
 	/* Esto es para probar */
 
-    while (!feof(fuente)) {
+/*    while (!feof(fuente)) {
         printf("Token identificado: %d\n", yylex());
     }
-
+*/
 
     yyparse();
 	system("PAUSE");
