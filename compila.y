@@ -169,11 +169,12 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 
 	/* Esto es para probar */
-
-/*    while (!feof(fuente)) {
+    while (!feof(fuente)) {
         printf("Token identificado: %d\n", yylex());
     }
-*/
+
+	/* En lugar de comentar el código anterior, muevo el puntero de nuevo al inicio del archivo */
+	fseek(fuente,0,SEEK_SET);
 
     yyparse();
 	system("PAUSE");
