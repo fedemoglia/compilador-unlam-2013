@@ -32,11 +32,13 @@ PRG	: I_PROG  bloque_principal lista_funciones I_FINPROG |
  I_PROG  bloque_principal I_FINPROG ;
 lista_funciones    :    funcion | lista_funciones funcion;
 bloque_principal    :    I_PROG_PRINCIPAL bloque I_FIN_PROG_PRINCIPAL ;
-bloque	:	lista_sentencias | declaracion lista_sentencias;
+bloque	:	lista_sentencias | bloque_declaraciones lista_sentencias;
 
 lista_sentencias : sentencia | lista_sentencias sentencia;
 
-declaracion	:	OP_DECLARACION { abreBloqueDeclaracion(); } tipo grupo_variables FIN_DEC { cierraBloqueDeclaracion(); } ;
+bloque_declaraciones : OP_DECLARACION { abreBloqueDeclaracion(); } grupo_declaraciones  FIN_DEC { cierraBloqueDeclaracion(); } ;
+grupo_declaraciones : declaracion | grupo_declaraciones declaracion;
+declaracion	:	 tipo { configurarTipoVariableDeclarada($1); } grupo_variables ;
 tipo	: 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
 funcion	:	INI_FUNCION declaracion_funcion bloque FIN_FUNCION;
 declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
@@ -70,6 +72,7 @@ CONST_ENTERA;
 int tokenIdentificado;
 char tokenChar;
 char palabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN]; int indiceLetraPalabraLeida;
+char tipoVariableDeclarada;
 int estado;
 char caracterLeido;
 FILE *fuente;
@@ -268,6 +271,15 @@ void abreBloqueDeclaracion() {
 void cierraBloqueDeclaracion() {
 	debugMessage("---- Cierra Bloque Declaraciones ----\n");
 	bloqueDeclaracionesActivo='n';
+}
+
+void configurarTipoVariableDeclarada(int idTokenTipoVariable) {
+	switch(idTokenTipoVariable) {
+		case TIPO_DATO_INT: tipoVariableDeclarada='e'; break;
+		case TIPO_DATO_REAL: tipoVariableDeclarada='r'; break;
+		case TIPO_DATO_STRING: tipoVariableDeclarada='s'; break;
+	}
+	debugMessageInt("--- Configurado tipo de variable --- ",idTokenTipoVariable);
 }
 
 int yylex()	{
