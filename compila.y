@@ -22,47 +22,6 @@
 %token CONST_STRING CONST_REAL CONST_ENTERA
 %token I_PROG_PRINCIPAL I_FIN_PROG_PRINCIPAL
 %token INST_IMPRIMIR PORCENTAJE
-/*OP_DECLARACION	:	DEC;
-SEPARADOR_DEC 	:	:;
-FIN_DEC	:	ENDEC;
-SEPARADOR_GRUPO_VARIABLES 	:	,;
-OP_COMPARACION	:	< |
-> |
-<= |
->= |
-!= |
-== ;
-OP_LOGICO_PRE	:	NOT;
-OP_LOGICO	:	AND |
-			OR ;
-OP_ASIGNACION	:	= ;
-OP_SUMA	:	+ ;
-OP_RESTA	:	- ;
-OP_MULTIPLICACION	:	* ;
-OP_DIVISION	:	/ ;
-P_ABRE	:	( ;
-P_CIERRE	:	) ;
-I_CONDICIONAL	:	IF;
-I_FINCONDICIONAL	:	ENDIF;
-I_BUCLE	:	WHILE;
-I_FINBUCLE	:	ENDWHILE;
-I_PROG_PRINCIPAL	:	MAIN;
-I_FIN_PROG_PRINCIPAL	:	ENDMAIN;
-I_PROG	:	BEGIN;
-I_FINPROG	:	END;
-INI_FUNCION	:	FUNCTION;
-FIN_FUNCION	:	RETURN;
-TIPO_DATO	:	REAL | INT;
-ID_VAR	: 	:	letra | letra cadena_str;
-INST_IMPRIMIR	:	PRINT;
-cadena_str	:	caracter |
-cadena_str caracter;
-caracter	:	letra | numero | caracter_especial;
-letra		:	a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z |
-				A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z ;
-caracter_especial:	@ | % | & | / | : | , | “ ;
-numero		:	0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-*/
 
 /* Start Symbol */
 %start PRG;
@@ -77,7 +36,7 @@ bloque	:	lista_sentencias | declaracion lista_sentencias;
 
 lista_sentencias : sentencia | lista_sentencias sentencia;
 
-declaracion	:	OP_DECLARACION tipo grupo_variables FIN_DEC;
+declaracion	:	OP_DECLARACION { abreBloqueDeclaracion(); } tipo grupo_variables FIN_DEC { cierraBloqueDeclaracion(); } ;
 tipo	: 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
 funcion	:	INI_FUNCION declaracion_funcion bloque FIN_FUNCION;
 declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
@@ -117,6 +76,7 @@ FILE *fuente;
 int linea = 0;
 
 char modoDebug='n';
+char bloqueDeclaracionesActivo='n';
 
 int yyparse();
 int yylex();
@@ -169,10 +129,10 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 
 	/* Esto es para probar */
-    while (!feof(fuente)) {
+/*    while (!feof(fuente)) {
         printf("Token identificado: %d\n", yylex());
     }
-
+*/
 	/* En lugar de comentar el código anterior, muevo el puntero de nuevo al inicio del archivo */
 	fseek(fuente,0,SEEK_SET);
 
@@ -299,6 +259,16 @@ int determinarColumna(char c) {
 	return columna;
 }
 
+void abreBloqueDeclaracion() {
+	
+	debugMessage("---- Abre Bloque Declaraciones ----");
+	bloqueDeclaracionesActivo='y';
+}
+
+void cierraBloqueDeclaracion() {
+	debugMessage("---- Cierra Bloque Declaraciones ----\n");
+	bloqueDeclaracionesActivo='n';
+}
 
 int yylex()	{
 	int cant=0;
@@ -356,38 +326,45 @@ void limpiarEspacioPalabraLeida() {
 void initId() {
 	limpiarEspacioPalabraLeida();
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
-	if(modoDebug=='y') {
-	printf("INFO initId: Letra Leida %c, Palabra Leída (temporal) %s\n",caracterLeido,palabraLeida);
-	}
+	/*debugMessageString("INFO initId: Palabra Leída (temporal)",palabraLeida);*/
+	
 }
 
 void contId() {
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
-	if(modoDebug=='y') {
-	printf("INFO contId: Letra Leida %c, Palabra Leída (temporal) %s\n",caracterLeido,palabraLeida);
-	}
-}
-
-int enModoDebug() {
-	return modoDebug=='y'?1:-1;
+	/*debugMessageString("INFO contId: Palabra Leída (temporal)",palabraLeida);*/
 }
 
 void finId() {
 	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
-	if(modoDebug=='y') {
-		printf("INFO finId: Palabra Leída %s, indice %d\n",palabraLeida, indicePalabraReservada);
-	}
-
-	// si NO es una palabra reservada
-	if(indicePalabraReservada == -1) {
+	
+	debugMessageString("Identificador leido",palabraLeida);
+		
+	
+	// si es una palabra reservada
+	if(indicePalabraReservada != -1) {
+		debugMessageInt("INFO finId: Indice Palabra Reservada", indicePalabraReservada);
+		tokenIdentificado = palabrasReservadas[indicePalabraReservada-1].valor;
+	} else {
 		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
-		if(modoDebug=='y') {
-			printf("Indice de tabla de símbolos: %d\n",indicePalabraEnTablaDeSimbolos);
+		
+		if(indicePalabraEnTablaDeSimbolos==-1) {
+			debugMessageString("Identificador no encontrado en tabla de símbolos",palabraLeida);
+			if(bloqueDeclaracionesActivo=='y') {
+				// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones, crearla.
+				// FIXME El ámbito y el tipo están fijados
+				cantidadElementosTablaSimbolos= agregarEnTS("main", 's', palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
+				debugMessageString("Agregando a tabla de símbolos",palabraLeida);
+			}
+			else {
+				debugMessageString("Error, se intento usar el identificador antes de definirlo",palabraLeida);
+			}
 		}
+		else {
+			debugMessageInt("Indice en tabla de símbolos",indicePalabraEnTablaDeSimbolos);
+			}
 		tokenIdentificado = ID_VAR;
-	} else {
-		tokenIdentificado = palabrasReservadas[indicePalabraReservada-1].valor;
 	}
 }
 
@@ -457,4 +434,29 @@ void opAsignacion() {
 
 void finArch() {
 	tokenIdentificado = 0;
+}
+
+void debugMessageInt(char * cadena, int entero) {
+	if(modoDebug=='y') {
+		char mensaje[100];
+		sprintf( mensaje, "%s: %d", cadena, entero );
+		puts(mensaje);
+	}
+}
+
+void debugMessage(char * cadena) {
+	if(modoDebug=='y') {
+		puts(cadena);
+	}
+}
+
+
+void debugMessageString(char * cadena, char * string) {
+	if(modoDebug=='y') {
+		char mensaje[100];
+		strcpy(mensaje,cadena);
+		strcat(mensaje,": ");
+		strcat(mensaje,string);
+		puts(mensaje);
+	}
 }
