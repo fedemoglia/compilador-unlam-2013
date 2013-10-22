@@ -9,14 +9,19 @@
 #define CANTIDAD_CARACTERES 19
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
 #define CANT_PALABRAS_RESERVADAS 20
+
+
+
 %}
 
 /* Tokens - Reglas AL */
 %token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_GRUPO_VARIABLES
-%token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR OP_ASIGNACION
-%token OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
+%token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR 
+%right OP_ASIGNACION I_PROG
+%left OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
 %token P_ABRE P_CIERRE I_CONDICIONAL I_FINCONDICIONAL I_BUCLE I_FINBUCLE
-%token I_PROG I_FINPROG INI_FUNCION FIN_FUNCION
+%left I_FINPROG 
+%token INI_FUNCION FIN_FUNCION
 %token TIPO_DATO_INT TIPO_DATO_REAL TIPO_DATO_STRING
 %token ID_VAR
 %token CONST_STRING CONST_REAL CONST_ENTERA
@@ -47,10 +52,32 @@ sentencia	:	asignacion |
 			bucle |
 			output;
 grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_GRUPO_VARIABLES grupo_variables;
-asignacion	:	ID_VAR OP_ASIGNACION mult_asignacion;
+asignacion	:	ID_VAR OP_ASIGNACION mult_asignacion  {
+	printf("Asignacion: IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	};
 mult_asignacion	:	expresion | expresion OP_ASIGNACION mult_asignacion;
-expresion	:	termino | expresion OP_SUMA termino | expresion OP_RESTA termino ;
-termino	:	factor | termino OP_MULTIPLICACION factor | termino OP_DIVISION factor;
+expresion	:	termino | expresion OP_SUMA termino {
+
+	printf("Suma: IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	
+}
+| expresion OP_RESTA termino {
+
+	printf("Resta: IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	
+
+};
+termino	:	factor | termino OP_MULTIPLICACION factor { 
+{
+	printf("Multiplicacion: IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	}
+	;}
+| termino OP_DIVISION factor {
+{
+	printf("División: IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	};
+}
+;
 factor	:	P_ABRE expresion P_CIERRE | constante_numerica | ID_VAR | CONST_STRING;
 bucle	:	I_BUCLE condicion bloque I_FINBUCLE;
 condicional	:	I_CONDICIONAL condicion bloque I_FINCONDICIONAL ;
@@ -108,6 +135,10 @@ void opAsignacion();
 void opSuma();
 void finArch();
 
+
+void debugMessageInt(char * , int );
+void debugMessageString(char * , char *);
+void debugMessage(char *);
 
 int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
@@ -298,7 +329,7 @@ int yylex()	{
 		estado = matrizTransicion[estado][columna];
 	}
 	ungetc(caracterLeido, fuente);
-
+	
 	return tokenIdentificado;
 }
 
@@ -358,6 +389,8 @@ void finId() {
 		debugMessageInt("INFO finId: Indice Palabra Reservada", indicePalabraReservada);
 		tokenIdentificado = palabrasReservadas[indicePalabraReservada-1].valor;
 	} else {
+		/* Si no es una palabra reservada, la busca en la tabla de simbolos */
+	
 		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
 		
@@ -367,6 +400,7 @@ void finId() {
 				// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones, crearla.
 				// FIXME El ámbito y el tipo están fijados
 				cantidadElementosTablaSimbolos= agregarEnTS("main", 's', palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
+				yylval = cantidadElementosTablaSimbolos;
 				debugMessageString("Agregando a tabla de símbolos",palabraLeida);
 			}
 			else {
@@ -375,6 +409,7 @@ void finId() {
 		}
 		else {
 			debugMessageInt("Indice en tabla de símbolos",indicePalabraEnTablaDeSimbolos);
+			yylval = indicePalabraEnTablaDeSimbolos;
 			}
 		tokenIdentificado = ID_VAR;
 	}
