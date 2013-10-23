@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <ctype.h>
-#include <conio.h>
+/*#include <conio.h>*/
 #include <stdlib.h>
 #include <string.h>
 #include "tablaSimbolos.h"
@@ -163,11 +163,11 @@ int main(int argc, char *argv[]) {
 
 	if( !(fuente = fopen(input,"rb+") ) ) {
 		printf("Error de apertura del archivo fuente...");
-		getch();
+		getchar();
 		exit(0);
     }
 	printf("Modo Debug? (y/n)");
-	modoDebug = getch();
+	modoDebug = getchar();
 	printf("\n");
 
 	/* Esto es para probar */
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 	fseek(fuente,0,SEEK_SET);
 
     yyparse();
-	system("PAUSE");
+	getchar();
     fclose(fuente);
 }
 
