@@ -50,12 +50,14 @@ declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
 sentencia	:	asignacion |
 			condicional |
 			bucle |
-			output;
+			output ;
 grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_GRUPO_VARIABLES grupo_variables;
 asignacion	:	ID_VAR OP_ASIGNACION mult_asignacion  {
 	printf("Asignacion: IndiceTS %d = IndiceTS %d\n",$1,$3); 
 	};
-mult_asignacion	:	expresion | expresion OP_ASIGNACION mult_asignacion;
+mult_asignacion	:	expresion | expresion OP_ASIGNACION mult_asignacion {
+printf("Asignacion (mult): IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	};
 expresion	:	termino | expresion OP_SUMA termino {
 
 	printf("Suma: IndiceTS %d = IndiceTS %d\n",$1,$3); 
@@ -79,14 +81,20 @@ termino	:	factor | termino OP_MULTIPLICACION factor {
 }
 ;
 factor	:	P_ABRE expresion P_CIERRE | constante_numerica | ID_VAR | CONST_STRING;
-bucle	:	I_BUCLE condicion bloque I_FINBUCLE;
+bucle	:	I_BUCLE condicion bloque I_FINBUCLE ;
 condicional	:	I_CONDICIONAL condicion bloque I_FINCONDICIONAL ;
 condicion	:	P_ABRE comparacion P_CIERRE |
 			P_ABRE comparacion operador comparacion P_CIERRE ;
 operador	: 	OP_LOGICO_AND | OP_LOGICO_OR;
-comparacion	:	elemento OP_COMPARACION elemento  |
-OP_LOGICO_PRE elemento OP_COMPARACION elemento;
-output		:	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE;
+comparacion	:	elemento OP_COMPARACION elemento {
+ printf("Comparacion: %d con %d (comparacion %d)\n",$1,$3,$2);};
+ 
+ |
+OP_LOGICO_PRE elemento OP_COMPARACION elemento { 
+	printf("Comparacion negada: %d con %d (comparacion %d)\n",$2,$4,$3);};
+output		:	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {
+	printf("Output: %d\n",$3);
+ };
 cadena_caracteres 	:	CONST_STRING | ID_VAR;
 elemento	:	CONST_STRING |
 constante_numerica |
@@ -425,10 +433,24 @@ void contCte() {
 
 void finCteEntera() {
 	tokenIdentificado = CONST_ENTERA;
-}
+	
+	/* Incompleto. Hay que pensar esto ...
+	char nombreConstante[LARGO_MAXIMO_NOMBRE_TOKEN+1] ;
+	strcpy(nombreConstante,"_");
+	strcat(nombreConstante,palabraLeida);
+	int valorConstante=atoi(palabraLeida);
+
+	cantidadElementosTablaSimbolos
+	palabraLeida */
+	
+	yylval=99999;
+
+	}
 
 void finCteReal() {
 	tokenIdentificado = CONST_REAL;
+	
+	yylval=99998;
 }
 
 void initCadena() {
@@ -441,6 +463,8 @@ void contCadena() {
 
 void finCadena() {
 	tokenIdentificado = CONST_STRING;
+	
+	yylval=99997;
 }
 
 void separadorDec() {
