@@ -156,6 +156,7 @@ int main(int argc, char *argv[]) {
 	if(argc<2) {
 		printf("Ingrese archivo fuente: ");
 		scanf("%s",&input);
+		fflush(stdin);
 	}
 	else {
 		strcpy(input,argv[1]);
@@ -168,6 +169,7 @@ int main(int argc, char *argv[]) {
     }
 	printf("Modo Debug? (y/n)");
 	modoDebug = getchar();
+	fflush(stdin);
 	printf("\n");
 
 	/* Esto es para probar */
