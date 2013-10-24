@@ -8,6 +8,7 @@
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
+#define LARGO_MAXIMO_CTE_STRING 30
 #define CANT_PALABRAS_RESERVADAS 20
 
 
@@ -143,10 +144,11 @@ void opAsignacion();
 void opSuma();
 void finArch();
 
-
 void debugMessageInt(char * , int );
 void debugMessageString(char * , char *);
 void debugMessage(char *);
+
+void escribirTSEnArchivo();
 
 int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
@@ -183,6 +185,8 @@ int main(int argc, char *argv[]) {
     yyparse();
 	getchar();
     fclose(fuente);
+	
+	escribirTSEnArchivo();
 }
 
 int yyerror(char *s) {
@@ -456,17 +460,31 @@ void finCteReal() {
 }
 
 void initCadena() {
-
+	limpiarEspacioPalabraLeida();
 }
 
 void contCadena() {
-
+	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 }
 
 void finCadena() {
-	tokenIdentificado = CONST_STRING;
+	debugMessageString("Constante leída leido",palabraLeida);
 	
-	yylval=99997;
+	if(strlen(palabraLeida) <= LARGO_MAXIMO_CTE_STRING) {	
+		// FIXME Habría que cambiar el ambito que está fijado
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
+		
+		if(indicePalabraEnTablaDeSimbolos==-1) {
+			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
+			// FIXME El ámbito y el tipo están fijados y falta agregar el "_" al principio del nombre del elemento.
+			cantidadElementosTablaSimbolos= agregarEnTS("main", 's', palabraLeida, palabraLeida, tablaSimbolos, cantidadElementosTablaSimbolos);
+			yylval = cantidadElementosTablaSimbolos;
+			debugMessageString("Agregando constante a tabla de símbolos",palabraLeida);
+		}		
+		tokenIdentificado = CONST_STRING;
+	} else {
+		debugMessageString("Error: La constante %s supera el maximo tamaño de caracteres admitido.",palabraLeida);
+	}
 }
 
 void separadorDec() {
@@ -532,4 +550,36 @@ void debugMessageString(char * cadena, char * string) {
 		strcat(mensaje,string);
 		puts(mensaje);
 	}
+}
+
+void escribirTSEnArchivo() {
+	FILE *tsFile;
+	if( !(tsFile = fopen("ts.txt","w") ) ) {
+		printf("Error de apertura del archivo de salida de la Tabla de Simbolos...");
+		getchar();
+		exit(0);
+    }
+
+	fprintf(tsFile, "--- Tabla de Símbolos ---\n\n");
+	
+	for(int i = 0; i <= cantidadElementosTablaSimbolos; i++) {
+	
+		fprintf(tsFile, "- Simbolo N°: %d\n", i);
+		fprintf(tsFile, "   Ambito: %s\n", tablaSimbolos[i].ambito);
+		fprintf(tsFile, "   Nombre: %s\n", tablaSimbolos[i].nombre);
+		
+		if(tablaSimbolos[i].tipo == 's') {
+			fprintf(tsFile, "   Tipo: string\n");
+			fprintf(tsFile, "   Valor: %s\n", tablaSimbolos[i].valorString);
+		} else if(tablaSimbolos[i].tipo == 'i') {
+			fprintf(tsFile, "   Tipo: entero\n");
+			fprintf(tsFile, "   Valor: %d\n", tablaSimbolos[i].valorEntero);
+		} else if(tablaSimbolos[i].tipo == 'r') {
+			fprintf(tsFile, "   Tipo: real\n");
+			fprintf(tsFile, "   Valor: %f\n", tablaSimbolos[i].valorReal);
+		}			
+		fprintf(tsFile, "   Eliminado: %d\n\n", tablaSimbolos[i].eliminado);
+	}
+	
+	fclose(tsFile);
 }
