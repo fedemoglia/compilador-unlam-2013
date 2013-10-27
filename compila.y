@@ -356,7 +356,7 @@ int verificarPalabraReservada(char *c)
     int i=0;
     while(i<CANT_PALABRAS_RESERVADAS)
     {
-        if(!strcmp(palabrasReservadas[i++].palabra,c))
+        if(!strcmpi(palabrasReservadas[i++].palabra,c))
         {
             return i;
         }
