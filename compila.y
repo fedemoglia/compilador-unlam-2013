@@ -17,11 +17,11 @@
 
 /* Tokens - Reglas AL */
 %token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_GRUPO_VARIABLES
-%token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR 
+%token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR
 %right OP_ASIGNACION I_PROG
 %left OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
 %token P_ABRE P_CIERRE I_CONDICIONAL I_FINCONDICIONAL I_BUCLE I_FINBUCLE
-%left I_FINPROG 
+%left I_FINPROG
 %token INI_FUNCION FIN_FUNCION
 %token TIPO_DATO_INT TIPO_DATO_REAL TIPO_DATO_STRING
 %token ID_VAR
@@ -37,8 +37,8 @@
 PRG	: I_PROG  bloque_principal lista_funciones I_FINPROG |
  I_PROG  bloque_principal I_FINPROG ;
 lista_funciones    :    funcion | lista_funciones funcion;
-bloque_principal    :    I_PROG_PRINCIPAL bloque I_FIN_PROG_PRINCIPAL ;
-bloque	:	lista_sentencias | bloque_declaraciones lista_sentencias;
+bloque_principal    :    bloque_declaraciones bloque_sentencias | bloque_sentencias;
+bloque_sentencias	:	I_PROG_PRINCIPAL lista_sentencias I_FIN_PROG_PRINCIPAL;
 
 lista_sentencias : sentencia | lista_sentencias sentencia;
 
@@ -46,7 +46,7 @@ bloque_declaraciones : OP_DECLARACION { abreBloqueDeclaracion(); } grupo_declara
 grupo_declaraciones : declaracion | grupo_declaraciones declaracion;
 declaracion	:	 tipo { configurarTipoVariableDeclarada($1); } grupo_variables ;
 tipo	: 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
-funcion	:	INI_FUNCION declaracion_funcion bloque FIN_FUNCION;
+funcion	:	INI_FUNCION declaracion_funcion lista_sentencias FIN_FUNCION;
 declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
 sentencia	:	asignacion |
 			condicional |
@@ -54,44 +54,44 @@ sentencia	:	asignacion |
 			output ;
 grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_GRUPO_VARIABLES grupo_variables;
 asignacion	:	ID_VAR OP_ASIGNACION mult_asignacion  {
-	printf("Asignacion: IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	printf("Asignacion: IndiceTS %d = IndiceTS %d\n",$1,$3);
 	};
 mult_asignacion	:	expresion | expresion OP_ASIGNACION mult_asignacion {
-printf("Asignacion (mult): IndiceTS %d = IndiceTS %d\n",$1,$3); 
+printf("Asignacion (mult): IndiceTS %d = IndiceTS %d\n",$1,$3);
 	};
 expresion	:	termino | expresion OP_SUMA termino {
 
-	printf("Suma: IndiceTS %d = IndiceTS %d\n",$1,$3); 
-	
+	printf("Suma: IndiceTS %d = IndiceTS %d\n",$1,$3);
+
 }
 | expresion OP_RESTA termino {
 
-	printf("Resta: IndiceTS %d = IndiceTS %d\n",$1,$3); 
-	
+	printf("Resta: IndiceTS %d = IndiceTS %d\n",$1,$3);
+
 
 };
-termino	:	factor | termino OP_MULTIPLICACION factor { 
+termino	:	factor | termino OP_MULTIPLICACION factor {
 {
-	printf("Multiplicacion: IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	printf("Multiplicacion: IndiceTS %d = IndiceTS %d\n",$1,$3);
 	}
 	;}
 | termino OP_DIVISION factor {
 {
-	printf("División: IndiceTS %d = IndiceTS %d\n",$1,$3); 
+	printf("División: IndiceTS %d = IndiceTS %d\n",$1,$3);
 	};
 }
 ;
 factor	:	P_ABRE expresion P_CIERRE | constante_numerica | ID_VAR | CONST_STRING;
-bucle	:	I_BUCLE condicion bloque I_FINBUCLE ;
-condicional	:	I_CONDICIONAL condicion bloque I_FINCONDICIONAL ;
+bucle	:	I_BUCLE condicion lista_sentencias I_FINBUCLE ;
+condicional	:	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL ;
 condicion	:	P_ABRE comparacion P_CIERRE |
 			P_ABRE comparacion operador comparacion P_CIERRE ;
 operador	: 	OP_LOGICO_AND | OP_LOGICO_OR;
 comparacion	:	elemento OP_COMPARACION elemento {
  printf("Comparacion: %d con %d (comparacion %d)\n",$1,$3,$2);};
- 
+
  |
-OP_LOGICO_PRE elemento OP_COMPARACION elemento { 
+OP_LOGICO_PRE elemento OP_COMPARACION elemento {
 	printf("Comparacion negada: %d con %d (comparacion %d)\n",$2,$4,$3);};
 output		:	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {
 	printf("Output: %d\n",$3);
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
     yyparse();
 	getchar();
     fclose(fuente);
-	
+
 	escribirTSEnArchivo();
 }
 
@@ -308,7 +308,7 @@ int determinarColumna(char c) {
 }
 
 void abreBloqueDeclaracion() {
-	
+
 	debugMessage("---- Abre Bloque Declaraciones ----");
 	bloqueDeclaracionesActivo='y';
 }
@@ -343,7 +343,7 @@ int yylex()	{
 		estado = matrizTransicion[estado][columna];
 	}
 	ungetc(caracterLeido, fuente);
-	
+
 	return tokenIdentificado;
 }
 
@@ -384,7 +384,7 @@ void initId() {
 	limpiarEspacioPalabraLeida();
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 	/*debugMessageString("INFO initId: Palabra Leída (temporal)",palabraLeida);*/
-	
+
 }
 
 void contId() {
@@ -394,20 +394,20 @@ void contId() {
 
 void finId() {
 	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
-	
+
 	debugMessageString("Identificador leido",palabraLeida);
-		
-	
+
+
 	// si es una palabra reservada
 	if(indicePalabraReservada != -1) {
 		debugMessageInt("INFO finId: Indice Palabra Reservada", indicePalabraReservada);
 		tokenIdentificado = palabrasReservadas[indicePalabraReservada-1].valor;
 	} else {
 		/* Si no es una palabra reservada, la busca en la tabla de simbolos */
-	
+
 		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
-		
+
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("Identificador no encontrado en tabla de símbolos",palabraLeida);
 			if(bloqueDeclaracionesActivo=='y') {
@@ -439,7 +439,7 @@ void contCte() {
 
 void finCteEntera() {
 	tokenIdentificado = CONST_ENTERA;
-	
+
 	/* Incompleto. Hay que pensar esto ...
 	char nombreConstante[LARGO_MAXIMO_NOMBRE_TOKEN+1] ;
 	strcpy(nombreConstante,"_");
@@ -448,14 +448,14 @@ void finCteEntera() {
 
 	cantidadElementosTablaSimbolos
 	palabraLeida */
-	
+
 	yylval=99999;
 
 	}
 
 void finCteReal() {
 	tokenIdentificado = CONST_REAL;
-	
+
 	yylval=99998;
 }
 
@@ -469,18 +469,18 @@ void contCadena() {
 
 void finCadena() {
 	debugMessageString("Constante leída leido",palabraLeida);
-	
-	if(strlen(palabraLeida) <= LARGO_MAXIMO_CTE_STRING) {	
+
+	if(strlen(palabraLeida) <= LARGO_MAXIMO_CTE_STRING) {
 		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
-		
+
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
 			// FIXME El ámbito y el tipo están fijados y falta agregar el "_" al principio del nombre del elemento.
 			cantidadElementosTablaSimbolos= agregarEnTS("main", 's', palabraLeida, palabraLeida, tablaSimbolos, cantidadElementosTablaSimbolos);
 			yylval = cantidadElementosTablaSimbolos;
 			debugMessageString("Agregando constante a tabla de símbolos",palabraLeida);
-		}		
+		}
 		tokenIdentificado = CONST_STRING;
 	} else {
 		debugMessageString("Error: La constante %s supera el maximo tamaño de caracteres admitido.",palabraLeida);
@@ -561,13 +561,13 @@ void escribirTSEnArchivo() {
     }
 
 	fprintf(tsFile, "--- Tabla de Símbolos ---\n\n");
-	
-	for(int i = 0; i <= cantidadElementosTablaSimbolos; i++) {
-	
+
+	for(int i = 0; i < cantidadElementosTablaSimbolos; i++) {
+
 		fprintf(tsFile, "- Simbolo N°: %d\n", i);
 		fprintf(tsFile, "   Ambito: %s\n", tablaSimbolos[i].ambito);
 		fprintf(tsFile, "   Nombre: %s\n", tablaSimbolos[i].nombre);
-		
+
 		if(tablaSimbolos[i].tipo == 's') {
 			fprintf(tsFile, "   Tipo: string\n");
 			fprintf(tsFile, "   Valor: %s\n", tablaSimbolos[i].valorString);
@@ -577,9 +577,9 @@ void escribirTSEnArchivo() {
 		} else if(tablaSimbolos[i].tipo == 'r') {
 			fprintf(tsFile, "   Tipo: real\n");
 			fprintf(tsFile, "   Valor: %f\n", tablaSimbolos[i].valorReal);
-		}			
+		}
 		fprintf(tsFile, "   Eliminado: %d\n\n", tablaSimbolos[i].eliminado);
 	}
-	
+
 	fclose(tsFile);
 }
