@@ -15,6 +15,8 @@
 
 %}
 
+%define debug
+
 /* Tokens - Reglas AL */
 %token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_GRUPO_VARIABLES
 %token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR
@@ -47,8 +49,8 @@ bloque_declaraciones : OP_DECLARACION { abreBloqueDeclaracion(); } grupo_declara
 grupo_declaraciones : declaracion | grupo_declaraciones declaracion;
 declaracion	:	 tipo { configurarTipoVariableDeclarada($1); } grupo_variables ;
 tipo	: 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
-funcion	:	INI_FUNCION declaracion_funcion lista_sentencias retorno_funcion FIN_FUNCION;
-retorno_funcion : RETORNO_FUNCION ID_VAR;
+funcion	:	INI_FUNCION declaracion_funcion lista_sentencias retorno_funcion ;
+retorno_funcion : FIN_FUNCION ID_VAR;
 declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
 sentencia	:	asignacion |
 			condicional |
