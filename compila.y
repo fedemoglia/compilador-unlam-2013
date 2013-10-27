@@ -9,7 +9,7 @@
 #define CANTIDAD_CARACTERES 19
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
 #define LARGO_MAXIMO_CTE_STRING 30
-#define CANT_PALABRAS_RESERVADAS 20
+#define CANT_PALABRAS_RESERVADAS 21
 
 
 
@@ -28,6 +28,7 @@
 %token CONST_STRING CONST_REAL CONST_ENTERA
 %token I_PROG_PRINCIPAL I_FIN_PROG_PRINCIPAL
 %token INST_IMPRIMIR PORCENTAJE
+%token RETORNO_FUNCION
 
 /* Start Symbol */
 %start PRG;
@@ -46,7 +47,8 @@ bloque_declaraciones : OP_DECLARACION { abreBloqueDeclaracion(); } grupo_declara
 grupo_declaraciones : declaracion | grupo_declaraciones declaracion;
 declaracion	:	 tipo { configurarTipoVariableDeclarada($1); } grupo_variables ;
 tipo	: 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
-funcion	:	INI_FUNCION declaracion_funcion lista_sentencias FIN_FUNCION;
+funcion	:	INI_FUNCION declaracion_funcion lista_sentencias retorno_funcion FIN_FUNCION;
+retorno_funcion : RETORNO_FUNCION ID_VAR;
 declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
 sentencia	:	asignacion |
 			condicional |
@@ -270,7 +272,8 @@ struct {
 	"and", OP_LOGICO_AND,
 	"or", OP_LOGICO_OR,
 	"print", INST_IMPRIMIR,
-	"percent", PORCENTAJE
+	"percent", PORCENTAJE,
+	"return", RETORNO_FUNCION
 };
 
 int determinarColumna(char c) {
