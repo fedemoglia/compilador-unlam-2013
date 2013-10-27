@@ -15,7 +15,6 @@
 
 %}
 
-%define debug
 
 /* Tokens - Reglas AL */
 %token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_GRUPO_VARIABLES
@@ -40,16 +39,16 @@
 PRG	: I_PROG  bloque_principal lista_funciones I_FINPROG |
  I_PROG  bloque_principal I_FINPROG ;
 lista_funciones    :    funcion | lista_funciones funcion;
-bloque_principal    :    bloque_declaraciones bloque_sentencias | bloque_sentencias;
+bloque_principal    :    bloque_declaraciones bloque_sentencias;
 bloque_sentencias	:	I_PROG_PRINCIPAL lista_sentencias I_FIN_PROG_PRINCIPAL;
 
 lista_sentencias : sentencia | lista_sentencias sentencia;
 
-bloque_declaraciones : OP_DECLARACION { abreBloqueDeclaracion(); } grupo_declaraciones  FIN_DEC { cierraBloqueDeclaracion(); } ;
+bloque_declaraciones : OP_DECLARACION { abreBloqueDeclaracion(); } grupo_declaraciones  FIN_DEC { cierraBloqueDeclaracion(); } | ;
 grupo_declaraciones : declaracion | grupo_declaraciones declaracion;
 declaracion	:	 tipo { configurarTipoVariableDeclarada($1); } grupo_variables ;
 tipo	: 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
-funcion	:	INI_FUNCION declaracion_funcion lista_sentencias retorno_funcion ;
+funcion	:	INI_FUNCION declaracion_funcion bloque_declaraciones lista_sentencias retorno_funcion ;
 retorno_funcion : FIN_FUNCION ID_VAR;
 declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
 sentencia	:	asignacion |
