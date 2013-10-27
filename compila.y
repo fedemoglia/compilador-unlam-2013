@@ -6,8 +6,8 @@
 #include <string.h>
 #include "tablaSimbolos.h"
 #include "pila.h"
-#define CANTIDAD_ESTADOS 24
-#define CANTIDAD_CARACTERES 19
+#define CANTIDAD_ESTADOS 25
+#define CANTIDAD_CARACTERES 20
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
 #define LARGO_MAXIMO_CTE_STRING 30
 #define CANT_PALABRAS_RESERVADAS 21
@@ -18,7 +18,7 @@
 
 
 /* Tokens - Reglas AL */
-%token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_GRUPO_VARIABLES
+%token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_LISTA_VARIABLES
 %token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR
 %right OP_ASIGNACION I_PROG
 %left OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
@@ -56,7 +56,7 @@ sentencia	:	asignacion |
 			condicional |
 			bucle |
 			output ;
-grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_GRUPO_VARIABLES grupo_variables;
+grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_LISTA_VARIABLES grupo_variables;
 asignacion	:	ID_VAR OP_ASIGNACION mult_asignacion  {
 	printf("Asignacion: IndiceTS %d = IndiceTS %d\n",$1,$3);
 	};
@@ -137,6 +137,7 @@ void initCadena();
 void contCadena();
 void finCadena();
 void separadorDec();
+void separadorListaVariables();
 void parentesisAbre();
 void parentesisCierra();
 void opSuma();
@@ -198,57 +199,59 @@ int yyerror(char *s) {
 }
 
 int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
-	{1,2,4,5,7,8,9,10,11,12,14,18,16,20,21,22,0,0,24},
-	{1,1,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,2,3,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,3,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,4,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{5,5,5,6,5,5,5,5,5,5,5,5,5,5,5,5,5,5,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,13,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,15,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,17,-1,-1,-1,-1,-1,-1,-1},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,19,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24},
-	{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,23,-1,-1,-1},
-	{23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,0},
+	{1,2,4,5,7,8,9,10,11,12,14,18,16,20,21,22, 24,0,0,25},
+	{1,1,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,2,3,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,3,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,4,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{5,5,5,6,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,-1},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,13,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,15,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,17,-1,-1,-1,-1,-1,-1,-1,-1},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,19,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+	{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,23,-1,-1,-1,-1},
+	{23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,0},
+	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25}
 };
 
 void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
-	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,nada,nada,finArch},
-	{contId,contId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId},
-	{finCteEntera,contCte,nada,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
-	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
-	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
-	{contCadena,contCadena,contCadena,finCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,error},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{error,error,error,error,error,error,error,error,error,error,error,opComparacion,error,error,error,error,error,error,error},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{error,error,error,error,error,error,error,error,error,error,error,error,error,error,error,nada,error,error,error},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,separadorListaVariables,nada,nada,finArch},
+	{contId,contId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId},
+	{finCteEntera,contCte,nada,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
+	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
+	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
+	{contCadena,contCadena,contCadena,finCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,error},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{error,error,error,error,error,error,error,error,error,error,error,opComparacion,error,error,error,error,error,error,error,error},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{error,error,error,error,error,error,error,error,error,error,error,error,error,error,error,nada,error,error,error,error},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada}
 };
 
 struct {
@@ -298,16 +301,17 @@ int determinarColumna(char c) {
 		case '(': columna=13; break;
 		case ')': columna=14; break;
 		case '#': columna=15; break;
-
+		case ',': columna=16; break;
+		
 		/* Saltos de línea */
-		case '\n': columna=16; linea++; break;
-		case '\r': columna=16; break;
+		case '\n': columna=17; linea++; break;
+		case '\r': columna=17; break;
 
 		/* Eliminado de espacios */
-		case '\t': columna=17; break;
-		case ' ': columna=17; break;
+		case '\t': columna=18; break;
+		case ' ': columna=18; break;
 
-		case EOF: columna=18; break;
+		case EOF: columna=19; break;
 	}
 	return columna;
 }
@@ -337,7 +341,6 @@ int yylex()	{
 	estado = 0;
 	int estadoFinal  = CANTIDAD_ESTADOS;
 	int columna;
-
 	while (estado != estadoFinal) {
 		caracterLeido = getc(fuente);
 		columna = determinarColumna(caracterLeido);
@@ -494,6 +497,10 @@ void finCadena() {
 
 void separadorDec() {
 	tokenIdentificado = SEPARADOR_DEC;
+}
+
+void separadorListaVariables() {
+	tokenIdentificado = SEPARADOR_LISTA_VARIABLES;
 }
 
 void parentesisAbre() {
