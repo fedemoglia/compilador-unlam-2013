@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tablaSimbolos.h"
+#include "pila.h"
 #define CANTIDAD_ESTADOS 24
 #define CANTIDAD_CARACTERES 19
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
