@@ -37,7 +37,7 @@ int agregarEnTS(char * ambito, char tipo, char * nombre, void * valor, struct el
 	
 	switch(tipo) {
 		case 'r': // Real. No sé por qué no funciona usar una constante con nombre :s
-			elemento.valorReal = (*((float *)valor));
+			elemento.valorReal = *((float *)valor);
 			elemento.valorEntero = 0;
 			strcpy(elemento.valorString,"");
 		break;
@@ -49,7 +49,7 @@ int agregarEnTS(char * ambito, char tipo, char * nombre, void * valor, struct el
 		break;
 
 		case 'e': // Entero
-			elemento.valorEntero = (*((int *)valor));
+			elemento.valorEntero = *((int *)valor);
 			elemento.valorReal = 0;
 			strcpy(elemento.valorString,"");
 		break;

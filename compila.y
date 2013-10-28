@@ -154,6 +154,7 @@ void debugMessageString(char * , char *);
 void debugMessage(char *);
 
 void escribirTSEnArchivo();
+void setNombreConstante(char *, char *);
 
 int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
@@ -229,7 +230,7 @@ int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
 void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
 	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,separadorListaVariables,nada,nada,finArch},
 	{contId,contId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId},
-	{finCteEntera,contCte,nada,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
+	{finCteEntera,contCte,contCte,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
 	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
 	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
 	{contCadena,contCadena,contCadena,finCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,contCadena,error},
@@ -438,33 +439,57 @@ void finId() {
 }
 
 void initCte() {
-
+	limpiarEspacioPalabraLeida();
+	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 }
 
 void contCte() {
-
+	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 }
 
 void finCteEntera() {
+	// FIXME Falta validar el tamaño maximo de una variable entera.
+	debugMessageString("Constante entera leída",palabraLeida);
+	
+	int tamPalabraLeida = strlen(palabraLeida);
+	char nombreConstante[tamPalabraLeida+1] ;
+	setNombreConstante(palabraLeida, nombreConstante);
+	
+	// FIXME Habría que cambiar el ambito que está fijado
+	int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
+
+	if(indicePalabraEnTablaDeSimbolos==-1) {
+		debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
+		
+		int valorConstante = atoi(palabraLeida);		
+		cantidadElementosTablaSimbolos = agregarEnTS("main", 'e', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
+		yylval = cantidadElementosTablaSimbolos;
+		debugMessageString("Agregando constante entera a tabla de símbolos",nombreConstante);
+	}	
 	tokenIdentificado = CONST_ENTERA;
-
-	/* Incompleto. Hay que pensar esto ...
-	char nombreConstante[LARGO_MAXIMO_NOMBRE_TOKEN+1] ;
-	strcpy(nombreConstante,"_");
-	strcat(nombreConstante,palabraLeida);
-	int valorConstante=atoi(palabraLeida);
-
-	cantidadElementosTablaSimbolos
-	palabraLeida */
-
-	yylval=99999;
-
-	}
+}
 
 void finCteReal() {
-	tokenIdentificado = CONST_REAL;
+	// FIXME Falta validar el tamaño maximo de una variable real.
+	debugMessageString("Constante real leída",palabraLeida);
+	
+	int tamPalabraLeida = strlen(palabraLeida);
+	char nombreConstante[tamPalabraLeida+1] ;
+	setNombreConstante(palabraLeida, nombreConstante);
+	
+	// FIXME Habría que cambiar el ambito que está fijado
+	int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
 
-	yylval=99998;
+	if(indicePalabraEnTablaDeSimbolos==-1) {
+		debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
+		
+		float valorConstante = atof(palabraLeida);		
+		cantidadElementosTablaSimbolos = agregarEnTS("main", 'r', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
+		yylval = cantidadElementosTablaSimbolos;
+		debugMessageString("Agregando constante real a tabla de símbolos",nombreConstante);
+	}
+	
+	tokenIdentificado = CONST_REAL;
 }
 
 void initCadena() {
@@ -478,16 +503,19 @@ void contCadena() {
 void finCadena() {
 	debugMessageString("Constante leída leido",palabraLeida);
 
-	if(strlen(palabraLeida) <= LARGO_MAXIMO_CTE_STRING) {
+	int tamPalabraLeida = strlen(palabraLeida);
+	if(tamPalabraLeida <= LARGO_MAXIMO_CTE_STRING) {
+		char nombreConstante[tamPalabraLeida+1] ;
+		setNombreConstante(palabraLeida, nombreConstante);
+		
 		// FIXME Habría que cambiar el ambito que está fijado
-		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
-			// FIXME El ámbito y el tipo están fijados y falta agregar el "_" al principio del nombre del elemento.
-			cantidadElementosTablaSimbolos= agregarEnTS("main", 's', palabraLeida, palabraLeida, tablaSimbolos, cantidadElementosTablaSimbolos);
+			cantidadElementosTablaSimbolos= agregarEnTS("main", 's', nombreConstante, palabraLeida, tablaSimbolos, cantidadElementosTablaSimbolos);
 			yylval = cantidadElementosTablaSimbolos;
-			debugMessageString("Agregando constante a tabla de símbolos",palabraLeida);
+			debugMessageString("Agregando constante a tabla de símbolos",nombreConstante);
 		}
 		tokenIdentificado = CONST_STRING;
 	} else {
@@ -583,7 +611,7 @@ void escribirTSEnArchivo() {
 		if(tablaSimbolos[i].tipo == 's') {
 			fprintf(tsFile, "   Tipo: string\n");
 			fprintf(tsFile, "   Valor: %s\n", tablaSimbolos[i].valorString);
-		} else if(tablaSimbolos[i].tipo == 'i') {
+		} else if(tablaSimbolos[i].tipo == 'e') {
 			fprintf(tsFile, "   Tipo: entero\n");
 			fprintf(tsFile, "   Valor: %d\n", tablaSimbolos[i].valorEntero);
 		} else if(tablaSimbolos[i].tipo == 'r') {
@@ -594,4 +622,9 @@ void escribirTSEnArchivo() {
 	}
 
 	fclose(tsFile);
+}
+
+void setNombreConstante(char * constante, char * nombreConstante) {
+	strcpy(nombreConstante,"_");
+	strcat(nombreConstante,constante);
 }
