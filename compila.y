@@ -11,7 +11,8 @@
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
 #define LARGO_MAXIMO_CTE_STRING 30
 #define CANT_PALABRAS_RESERVADAS 21
-
+#define TAM_MAX_CTE_REAL 9999 // TODO Definir número real.
+#define TAM_MAX_CTE_ENTERA 9999 // TODO Definir número real.
 
 
 %}
@@ -152,6 +153,7 @@ void finArch();
 void debugMessageInt(char * , int );
 void debugMessageString(char * , char *);
 void debugMessage(char *);
+void compilationError(char *);
 
 void escribirTSEnArchivo();
 void setNombreConstante(char *, char *);
@@ -454,19 +456,23 @@ void finCteEntera() {
 	int tamPalabraLeida = strlen(palabraLeida);
 	char nombreConstante[tamPalabraLeida+1] ;
 	setNombreConstante(palabraLeida, nombreConstante);
+	int valorConstante = atoi(palabraLeida);
 	
-	// FIXME Habría que cambiar el ambito que está fijado
-	int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
+	if(valorConstante <= TAM_MAX_CTE_ENTERA) {	
+		// FIXME Habría que cambiar el ambito que está fijado
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
 
-	if(indicePalabraEnTablaDeSimbolos==-1) {
-		debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
-		
-		int valorConstante = atoi(palabraLeida);		
-		cantidadElementosTablaSimbolos = agregarEnTS("main", 'e', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
-		yylval = cantidadElementosTablaSimbolos;
-		debugMessageString("Agregando constante entera a tabla de símbolos",nombreConstante);
-	}	
-	tokenIdentificado = CONST_ENTERA;
+		if(indicePalabraEnTablaDeSimbolos==-1) {
+			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
+					
+			cantidadElementosTablaSimbolos = agregarEnTS("main", 'e', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
+			yylval = cantidadElementosTablaSimbolos;
+			debugMessageString("Agregando constante entera a tabla de símbolos",nombreConstante);
+		}	
+		tokenIdentificado = CONST_ENTERA;
+	} else {
+		compilationError("La constante entera supera el máximo permitido");
+	}
 }
 
 void finCteReal() {
@@ -476,20 +482,24 @@ void finCteReal() {
 	int tamPalabraLeida = strlen(palabraLeida);
 	char nombreConstante[tamPalabraLeida+1] ;
 	setNombreConstante(palabraLeida, nombreConstante);
+	float valorConstante = atof(palabraLeida);
 	
-	// FIXME Habría que cambiar el ambito que está fijado
-	int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
+	if(valorConstante <= TAM_MAX_CTE_REAL) {
+		// FIXME Habría que cambiar el ambito que está fijado
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
 
-	if(indicePalabraEnTablaDeSimbolos==-1) {
-		debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
+		if(indicePalabraEnTablaDeSimbolos==-1) {
+			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
+					
+			cantidadElementosTablaSimbolos = agregarEnTS("main", 'r', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
+			yylval = cantidadElementosTablaSimbolos;
+			debugMessageString("Agregando constante real a tabla de símbolos",nombreConstante);
+		}
 		
-		float valorConstante = atof(palabraLeida);		
-		cantidadElementosTablaSimbolos = agregarEnTS("main", 'r', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
-		yylval = cantidadElementosTablaSimbolos;
-		debugMessageString("Agregando constante real a tabla de símbolos",nombreConstante);
+		tokenIdentificado = CONST_REAL;
+	} else {
+		compilationError("La constante real supera el máximo permitido");
 	}
-	
-	tokenIdentificado = CONST_REAL;
 }
 
 void initCadena() {
@@ -590,6 +600,13 @@ void debugMessageString(char * cadena, char * string) {
 		strcat(mensaje,string);
 		puts(mensaje);
 	}
+}
+
+void compilationError(char * mensaje) {
+	printf("ERROR: %s\n", mensaje);
+	puts("La compilación finalizó con errores, presione una tecla para finalizar");
+	system("pause");
+	exit(0);
 }
 
 void escribirTSEnArchivo() {
