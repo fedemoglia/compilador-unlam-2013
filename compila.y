@@ -6,6 +6,7 @@
 #include <string.h>
 #include "tablaSimbolos.h"
 #include "pila.h"
+#include "polaca.h"
 #define CANTIDAD_ESTADOS 25
 #define CANTIDAD_CARACTERES 20
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
@@ -37,9 +38,8 @@
 
 /* Reglas AS */
 %%
-PRG	: I_PROG  lista_declaraciones bloque_principal I_FINPROG |
- I_PROG  bloque_principal I_FINPROG ;
-lista_declaraciones	: bloque_declaraciones lista_funciones | lista_funciones;
+PRG	: I_PROG  lista_declaraciones bloque_principal I_FINPROG;
+lista_declaraciones	: bloque_declaraciones | bloque_declaraciones lista_funciones;
 lista_funciones    :    funcion | lista_funciones funcion;
 bloque_principal	:	I_PROG_PRINCIPAL lista_sentencias I_FIN_PROG_PRINCIPAL;
 
@@ -58,7 +58,7 @@ sentencia	:	asignacion |
 			output |
 			porcentaje;
 grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_LISTA_VARIABLES grupo_variables;
-asignacion	:	ID_VAR OP_ASIGNACION mult_asignacion  {
+asignacion	:	ID_VAR  OP_ASIGNACION mult_asignacion  {
 	printf("Asignacion: IndiceTS %d = IndiceTS %d\n",$1,$3);
 	};
 mult_asignacion	:	expresion | expresion OP_ASIGNACION mult_asignacion {
@@ -78,15 +78,20 @@ expresion	:	termino | expresion OP_SUMA termino {
 termino	:	factor | termino OP_MULTIPLICACION factor {
 {
 	printf("Multiplicacion: IndiceTS %d = IndiceTS %d\n",$1,$3);
+	agregarAPolaca("/");
 	}
 	;}
 | termino OP_DIVISION factor {
 {
 	printf("División: IndiceTS %d = IndiceTS %d\n",$1,$3);
+	agregarAPolaca("*");
 	};
 }
 ;
-factor	:	P_ABRE expresion P_CIERRE | constante_numerica | ID_VAR | CONST_STRING;
+factor	:	P_ABRE expresion P_CIERRE | constante_numerica | ID_VAR {
+	
+}
+| CONST_STRING;
 bucle	:	I_BUCLE condicion lista_sentencias I_FINBUCLE ;
 condicional	:	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL ;
 condicion	:	P_ABRE comparacion P_CIERRE |
@@ -162,6 +167,7 @@ void setNombreConstante(char *, char *);
 
 int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
+struct polaca polacaInv;
 
 int main(int argc, char *argv[]) {
 	char input[20];
@@ -179,6 +185,9 @@ int main(int argc, char *argv[]) {
 		getchar();
 		exit(0);
     }
+	
+	polacaInv.cantidadElementos=0;
+	
 	printf("Modo Debug? (y/n)");
 	modoDebug = getchar();
 	fflush(stdin);
@@ -197,6 +206,7 @@ int main(int argc, char *argv[]) {
     fclose(fuente);
 
 	escribirTSEnArchivo();
+//	imprimePolaca(polacaInv);
 }
 
 int yyerror(char *s) {
@@ -204,34 +214,35 @@ int yyerror(char *s) {
 }
 
 int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
-	{1,2,4,5,7,8,9,10,11,12,14,18,16,20,21,22, 24,0,0,25},
-	{1,1,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,2,3,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,3,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,4,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{5,5,5,6,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,-1},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,13,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,15,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,17,-1,-1,-1,-1,-1,-1,-1,-1},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,19,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
-	{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,23,-1,-1,-1,-1},
-	{23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,0},
-	{25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25}
+        {1,2,4,5,7,8,9,10,11,12,14,18,16,20,21,22, 24,0,0,25},
+        {1,1,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,2,3,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,3,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,4,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {5,5,5,6,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,-1},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,13,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,15,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,17,-1,-1,-1,-1,-1,-1,-1,-1},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,19,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25},
+        {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,23,-1,-1,-1,-1},
+        {23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,0,23,0},
+        {25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25}
 };
 
 void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
+
 	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,separadorListaVariables,nada,nada,finArch},
 	{contId,contId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId},
 	{finCteEntera,contCte,contCte,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
@@ -653,4 +664,20 @@ void escribirTSEnArchivo() {
 void setNombreConstante(char * constante, char * nombreConstante) {
 	strcpy(nombreConstante,"_");
 	strcat(nombreConstante,constante);
+}
+
+/* Funciones de Polaca */
+
+void agregarAPolaca(int indiceTS) {
+	
+	//FIXME Ámbito hardcodeado
+	printf("Agregando a polaca %d. %s\n",indiceTS,tablaSimbolos[indiceTS].nombre);
+	
+	if(indiceTS!=-1) {
+		polacaAgregar(&polacaInv,tablaSimbolos[indiceTS].nombre,tablaSimbolos[indiceTS].tipo);
+		debugMessageString("Agregado ID a polaca inversa: ",tablaSimbolos[indiceTS].nombre);
+	}
+	else {
+		// TODO Puede darse este caso? Es decir, que se llegue acá con un identificador que no esté en la TS
+	}
 }
