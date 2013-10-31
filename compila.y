@@ -507,7 +507,11 @@ void initCadena() {
 }
 
 void contCadena() {
-	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
+	if(indiceLetraPalabraLeida < LARGO_MAXIMO_CTE_STRING) {
+		palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
+	} else {
+		compilationError("La cadena supera el máximo tamaño aceptado");
+	}
 }
 
 void finCadena() {
