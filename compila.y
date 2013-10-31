@@ -31,18 +31,17 @@
 %token CONST_STRING CONST_REAL CONST_ENTERA
 %token I_PROG_PRINCIPAL I_FIN_PROG_PRINCIPAL
 %token INST_IMPRIMIR PORCENTAJE
-%token RETORNO_FUNCION
 
 /* Start Symbol */
 %start PRG;
 
 /* Reglas AS */
 %%
-PRG	: I_PROG  bloque_principal lista_funciones I_FINPROG |
+PRG	: I_PROG  lista_declaraciones bloque_principal I_FINPROG |
  I_PROG  bloque_principal I_FINPROG ;
+lista_declaraciones	: bloque_declaraciones lista_funciones | lista_funciones;
 lista_funciones    :    funcion | lista_funciones funcion;
-bloque_principal    :    bloque_declaraciones bloque_sentencias;
-bloque_sentencias	:	I_PROG_PRINCIPAL lista_sentencias I_FIN_PROG_PRINCIPAL;
+bloque_principal	:	I_PROG_PRINCIPAL lista_sentencias I_FIN_PROG_PRINCIPAL;
 
 lista_sentencias : sentencia | lista_sentencias sentencia;
 
@@ -56,7 +55,8 @@ declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
 sentencia	:	asignacion |
 			condicional |
 			bucle |
-			output ;
+			output |
+			porcentaje;
 grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_LISTA_VARIABLES grupo_variables;
 asignacion	:	ID_VAR OP_ASIGNACION mult_asignacion  {
 	printf("Asignacion: IndiceTS %d = IndiceTS %d\n",$1,$3);
@@ -101,6 +101,7 @@ OP_LOGICO_PRE elemento OP_COMPARACION elemento {
 output		:	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {
 	printf("Output: %d\n",$3);
  };
+porcentaje			: PORCENTAJE P_ABRE expresion SEPARADOR_LISTA_VARIABLES expresion P_CIERRE;
 cadena_caracteres 	:	CONST_STRING | ID_VAR;
 elemento	:	CONST_STRING |
 constante_numerica |
@@ -113,6 +114,7 @@ CONST_ENTERA;
 int tokenIdentificado;
 char tokenChar;
 char palabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN]; int indiceLetraPalabraLeida;
+char anteriorPalabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN];
 char tipoVariableDeclarada;
 int estado;
 char caracterLeido;
@@ -281,7 +283,6 @@ struct {
 	"or", OP_LOGICO_OR,
 	"print", INST_IMPRIMIR,
 	"percent", PORCENTAJE,
-	"return", RETORNO_FUNCION
 };
 
 int determinarColumna(char c) {
@@ -421,10 +422,10 @@ void finId() {
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("Identificador no encontrado en tabla de símbolos",palabraLeida);
-			if(bloqueDeclaracionesActivo=='y') {
+			if(bloqueDeclaracionesActivo=='y' || !strcmpi(anteriorPalabraLeida,"function")) {
 				// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones, crearla.
 				// FIXME El ámbito y el tipo están fijados
-				cantidadElementosTablaSimbolos= agregarEnTS("main", 's', palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
+				cantidadElementosTablaSimbolos= agregarEnTS("main", anteriorPalabraLeida[0], palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
 				yylval = cantidadElementosTablaSimbolos;
 				debugMessageString("Agregando a tabla de símbolos",palabraLeida);
 			}
@@ -438,6 +439,7 @@ void finId() {
 			}
 		tokenIdentificado = ID_VAR;
 	}
+	strcpy(anteriorPalabraLeida,palabraLeida);
 }
 
 void initCte() {
@@ -638,6 +640,9 @@ void escribirTSEnArchivo() {
 		} else if(tablaSimbolos[i].tipo == 'r') {
 			fprintf(tsFile, "   Tipo: real\n");
 			fprintf(tsFile, "   Valor: %f\n", tablaSimbolos[i].valorReal);
+		} else if(tablaSimbolos[i].tipo == 'f') {
+			fprintf(tsFile, "   Tipo: función\n");
+			fprintf(tsFile, "   Valor: %f\n", tablaSimbolos[i].valorString);
 		}
 		fprintf(tsFile, "   Eliminado: %d\n\n", tablaSimbolos[i].eliminado);
 	}
