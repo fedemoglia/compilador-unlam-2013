@@ -100,12 +100,12 @@ grupo_variables:
 	
 asignacion:
 	ID_VAR {  agregarAPolaca($1); } 
-	OP_ASIGNACION { agregarOperacionAPolaca("="); } 
-	mult_asignacion ;
+	OP_ASIGNACION  
+	mult_asignacion { agregarOperacionAPolaca("="); };
 	
 mult_asignacion:
-	expresion 
-	| expresion OP_ASIGNACION { agregarOperacionAPolaca("="); } mult_asignacion ;
+	expresion
+	| expresion OP_ASIGNACION mult_asignacion { agregarOperacionAPolaca("="); };
 	
 expresion:	
 	termino 
