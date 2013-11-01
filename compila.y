@@ -26,7 +26,8 @@
 
 /* Tokens - Reglas AL */
 %token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_LISTA_VARIABLES
-%token OP_COMPARACION OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR
+%token OP_COMP_MAYOR OP_COMP_MENOR OP_COMP_MAYOR_IGUAL OP_COMP_MENOR_IGUAL OP_COMP_IGUAL OP_COMP_DISTINTO
+%token OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR
 %right OP_ASIGNACION I_PROG
 %left OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
 %token P_ABRE P_CIERRE I_CONDICIONAL I_FINCONDICIONAL I_BUCLE I_FINBUCLE
@@ -140,8 +141,24 @@ operador:
 	| OP_LOGICO_OR;
 	
 comparacion:
-	elemento OP_COMPARACION elemento {printf("Comparacion: %d con %d (comparacion %d)\n",$1,$3,$2);};
-	| OP_LOGICO_PRE elemento OP_COMPARACION elemento {printf("Comparacion negada: %d con %d (comparacion %d)\n",$2,$4,$3);};
+	expresion OP_COMP_MAYOR expresion { }
+	| OP_LOGICO_PRE expresion OP_COMP_MAYOR expresion { }
+
+	| expresion OP_COMP_MENOR expresion { }
+	| OP_LOGICO_PRE expresion OP_COMP_MENOR expresion { }
+
+	| expresion OP_COMP_MAYOR_IGUAL expresion { }
+	| OP_LOGICO_PRE expresion OP_COMP_MAYOR_IGUAL expresion { }
+
+	| expresion OP_COMP_MENOR_IGUAL expresion { }
+	| OP_LOGICO_PRE expresion OP_COMP_MENOR_IGUAL expresion { }
+
+	| expresion OP_COMP_IGUAL expresion { }
+	| OP_LOGICO_PRE expresion OP_COMP_IGUAL expresion { }
+
+	| expresion OP_COMP_DISTINTO expresion { }
+	| OP_LOGICO_PRE expresion OP_COMP_DISTINTO expresion { }
+	;
 	
 output:
 	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {printf("Output: %d\n",$3);};
@@ -157,13 +174,6 @@ cadena_caracteres:
 		agregarAPolaca($1);
 	};
 
-elemento:
-	CONST_STRING
-	| constante_numerica 
-	| ID_VAR {
-		agregarAPolaca($1);
-	};
-	
 constante_numerica:
 	CONST_REAL 
 	| CONST_ENTERA ;
@@ -207,7 +217,12 @@ void opSuma();
 void opResta();
 void opMultiplicacion();
 void opDivision();
-void opComparacion();
+void opComparacionMayor();
+void opComparacionMenor();
+void opComparacionMayorIgual();
+void opComparacionMenorIgual();
+void opComparacionIgual();
+void opComparacionDistinto();
 void opAsignacion();
 void opSuma();
 void finArch();
@@ -298,7 +313,7 @@ int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
 
 void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
 
-	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacion,opComparacion,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,separadorListaVariables,nada,nada,finArch},
+	{initId,initCte,initCte,initCadena,separadorDec,opSuma,opResta,opMultiplicacion,opDivision,opComparacionMenor,opComparacionMayor,opAsignacion,nada,parentesisAbre,parentesisCierra,nada,separadorListaVariables,nada,nada,finArch},
 	{contId,contId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId,finId},
 	{finCteEntera,contCte,contCte,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera,finCteEntera},
 	{finCteReal,contCte,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal,finCteReal},
@@ -310,13 +325,13 @@ void (*proceso[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES])()= {
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacionMenorIgual,nada,nada,nada,nada,nada,nada,nada,nada},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacionMayorIgual,nada,nada,nada,nada,nada,nada,nada,nada},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{error,error,error,error,error,error,error,error,error,error,error,opComparacion,error,error,error,error,error,error,error,error},
+	{error,error,error,error,error,error,error,error,error,error,error,opComparacionDistinto,error,error,error,error,error,error,error,error},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
-	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacion,nada,nada,nada,nada,nada,nada,nada,nada},
+	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,opComparacionIgual,nada,nada,nada,nada,nada,nada,nada,nada},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
 	{nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada,nada},
@@ -648,8 +663,28 @@ void opDivision() {
 	tokenIdentificado = OP_DIVISION;
 }
 
-void opComparacion() {
-	tokenIdentificado = OP_COMPARACION;
+void opComparacionMenor() {
+	tokenIdentificado = OP_COMP_MENOR;
+}
+
+void opComparacionMayor() {
+	tokenIdentificado = OP_COMP_MAYOR;
+}
+
+void opComparacionMenorIgual() {
+	tokenIdentificado = OP_COMP_MENOR_IGUAL;
+}
+
+void opComparacionMayorIgual() {
+	tokenIdentificado = OP_COMP_MAYOR_IGUAL;
+}
+
+void opComparacionIgual() {
+	tokenIdentificado = OP_COMP_IGUAL;
+}
+
+void opComparacionDistinto() {
+	tokenIdentificado = OP_COMP_DISTINTO;
 }
 
 void opAsignacion() {
