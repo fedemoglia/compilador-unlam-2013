@@ -1,28 +1,30 @@
 
-struct datoPila {
-	char datoString[200];
-	
+#define TAMANIO_PILA 10000
+
+struct elementoPolaca {
+	char elemento[40];
+	char tipo;
 };
-typedef struct nodoPila
-{
-	struct datoPila dato;
-	struct nodoPila * siguiente;
-} nodoPila;
+
+typedef struct pila {
+	struct elementoPolaca elementos[TAMANIO_PILA];
+	int cantidadElementosPila;
+} pila;
 
 
-nodoPila*  pilaEmpujar(nodoPila * pila, struct datoPila elemento) {
+void pilaEmpujar(struct pila * stack, struct elementoPolaca elemento) {
 
-	nodoPila * nuevo = (nodoPila *)malloc(sizeof(nodoPila));
-	nuevo->dato=elemento;
-
-	nuevo->siguiente=pila;
-	pila = nuevo;
+	if(stack->cantidadElementosPila==TAMANIO_PILA) {
+		printf("Stack Overflow!");
+		exit(1);
+		}
 	
-	return nuevo;
+	stack->elementos[stack->cantidadElementosPila]=elemento;
+	stack->cantidadElementosPila++;
 }
 
-int pilaVacia (nodoPila * pila) {
-	if(pila==NULL) {
+int pilaVacia (struct pila * stack) {
+	if(stack->cantidadElementosPila==0) {
 		return 1;
 	}
 	else {
@@ -30,25 +32,25 @@ int pilaVacia (nodoPila * pila) {
 	}
 }
 
-nodoPila* pilaExtraer(nodoPila * pila, struct datoPila & elemento) {
+void pilaExtraer(struct pila * stack, struct elementoPolaca & elemento) {
 
-	if(pilaVacia(pila)) {
+	if(pilaVacia(stack)) {
 		printf("Error! Se quiso extraer de una pila vacía\n");
 		exit(1);
 	}
 	
-	elemento=pila->dato;
+	elemento=stack->elementos[stack->cantidadElementosPila-1];
+	stack->cantidadElementosPila--;
 	
-	pila = pila->siguiente;
-	return pila;
+	return ;
 }
 
-void imprimirPila(nodoPila * pila) {
-	nodoPila * elem = pila;
+void imprimirPila(struct pila  * stack) {
 	printf("\n===VOLCADO DE PILA=== \n");
-	while(elem!=NULL) {
-		printf("\nDesapilando: ");
-		printf("%s\n",elem->dato.datoString);	
-		elem=elem->siguiente;
+	int i=stack->cantidadElementosPila;
+	while(i>=0) {
+		struct elementoPolaca elem = stack->elementos[i];
+		printf("%s (%c)\n",elem.elemento,elem.tipo);	
+		i--;
 	} 
 }

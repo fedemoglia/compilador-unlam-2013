@@ -1,28 +1,23 @@
 #define TAM_POLACA 4000
 
-struct elementoPolaca {
-	char elemento[40];
-	char tipo;
-};
+#include "pila.h"
 
-struct polaca {
-	int cantidadElementos;
-	struct elementoPolaca elementos[TAM_POLACA];
-	};
+
 	
-void polacaAgregar(struct polaca * pol,char * elemento, char tipo='?') {
+void polacaAgregar(struct pila * pol,char * elemento, char tipo='?') {
 	struct elementoPolaca nuevo;
 	strcpy(nuevo.elemento,elemento);
 	nuevo.tipo=tipo;
 	
-	pol->elementos[pol->cantidadElementos] = nuevo;
-	pol->cantidadElementos++;	
+	pilaEmpujar(pol,nuevo);
 }
 
 
-void imprimePolaca(struct polaca * pol)
+void imprimePolaca(struct pila * pol)
 {
-	int i=0;
+	imprimirPila(pol);
+
+	/*int i=0;
 	printf("Abriendo archivo de intermedia\n");
 	FILE *out = fopen("intermedia.txt","w");
 	printf("Abierto archivo de intermedia. Volcando %d elementos \n",pol->cantidadElementos);
@@ -33,6 +28,6 @@ void imprimePolaca(struct polaca * pol)
 		i++;
 	}
 	
-	fclose(out);
+	fclose(out);*/
 }
 
