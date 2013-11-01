@@ -4,7 +4,7 @@
 
 
 	
-void polacaAgregar(struct pila * pol,char * elemento, char tipo='?') {
+void polacaAgregar(struct pila * pol,char * elemento, char tipo) {
 	struct elementoPolaca nuevo;
 	strcpy(nuevo.elemento,elemento);
 	nuevo.tipo=tipo;
