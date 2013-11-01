@@ -5,8 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tablaSimbolos.h"
-#include "pila.h"
-#include "polaca.h"
+
+#ifndef POLACA_H
+	#include "polaca.h"
+	#define POLACA_H
+#endif
+
+
 #define CANTIDAD_ESTADOS 25
 #define CANTIDAD_CARACTERES 20
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
@@ -58,7 +63,7 @@ sentencia	:	asignacion |
 			output |
 			porcentaje;
 grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_LISTA_VARIABLES grupo_variables;
-asignacion	:	ID_VAR { agregarAPolaca($1); } OP_ASIGNACION { agregarOperacionAPolaca("="); } 
+asignacion	:	ID_VAR {  agregarAPolaca($1); } OP_ASIGNACION { agregarOperacionAPolaca("="); } 
 	mult_asignacion ;
 mult_asignacion	:	expresion | expresion OP_ASIGNACION { agregarOperacionAPolaca("="); } mult_asignacion ;
 expresion	:	termino | expresion OP_SUMA termino {
@@ -93,7 +98,7 @@ output		:	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {
 	printf("Output: %d\n",$3);
  };
 porcentaje			: PORCENTAJE P_ABRE expresion SEPARADOR_LISTA_VARIABLES expresion P_CIERRE;
-cadena_caracteres 	:	CONST_STRING {printf("CHK4");agregarAPolaca($1);} | ID_VAR {printf("CHK5");agregarAPolaca($1);};
+cadena_caracteres 	:	CONST_STRING {printf("CHK_PRINT. ");agregarAPolaca($1);} | ID_VAR {printf("CHK5");agregarAPolaca($1);};
 elemento	:	CONST_STRING |
 constante_numerica |
 ID_VAR {
@@ -155,7 +160,7 @@ void setNombreConstante(char *, char *);
 
 int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
-struct polaca polacaInv;
+struct pila polacaInv;
 
 int main(int argc, char *argv[]) {
 	char input[20];
@@ -174,7 +179,7 @@ int main(int argc, char *argv[]) {
 		exit(0);
     }
 	
-	polacaInv.cantidadElementos=0;
+	polacaInv.cantidadElementosPila=0;
 	
 	printf("Modo Debug? (y/n)");
 	modoDebug = getchar();
