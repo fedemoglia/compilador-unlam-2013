@@ -50,7 +50,8 @@ void imprimirPila(struct pila  * stack) {
 	int i=stack->cantidadElementosPila;
 	while(i>=0) {
 		struct elementoPolaca elem = stack->elementos[i];
-		printf("%s (%c)\n",elem.elemento,elem.tipo);	
+		struct elementoPolaca elemInv = stack->elementos[stack->cantidadElementosPila-i];
+		printf("%s (%c)\tR - %s (%c)\n",elem.elemento,elem.tipo,elemInv.elemento,elemInv.tipo);	
 		i--;
 	} 
 }

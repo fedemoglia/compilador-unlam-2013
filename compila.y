@@ -116,7 +116,6 @@ termino:
 	factor 
 	| termino OP_MULTIPLICACION factor {agregarOperacionAPolaca("*");}
 	| termino OP_DIVISION factor {
-		printf("División: IndiceTS %d = IndiceTS %d\n",$1,$3);
 		agregarOperacionAPolaca("/");
 	};
 		
@@ -152,11 +151,9 @@ porcentaje:
 	
 cadena_caracteres:
 	CONST_STRING {
-		printf("CHK_PRINT. ");
 		agregarAPolaca($1);
 	} 
 	| ID_VAR {
-		printf("CHK5");
 		agregarAPolaca($1);
 	};
 
@@ -164,7 +161,6 @@ elemento:
 	CONST_STRING
 	| constante_numerica 
 	| ID_VAR {
-		printf("CHK6");
 		agregarAPolaca($1);
 	};
 	
