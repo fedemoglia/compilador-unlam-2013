@@ -433,7 +433,7 @@ int verificarPalabraReservada(char *c)
     int i=0;
     while(i<CANT_PALABRAS_RESERVADAS)
     {
-        if(!strcmpi(palabrasReservadas[i++].palabra,c))
+	if(!compareCaseInsensitive(palabrasReservadas[i++].palabra,c))
         {
             return i;
         }
@@ -491,7 +491,7 @@ void finId() {
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("--- INFO --- Identificador no encontrado en tabla de símbolos",palabraLeida);
-			if(bloqueDeclaracionesActivo=='y' || !strcmpi(anteriorPalabraLeida,"function")) {
+			if(bloqueDeclaracionesActivo=='y' || !compareCaseInsensitive(anteriorPalabraLeida,"function")) {
 				// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones, crearla.
 				// FIXME El ámbito y el tipo están fijados
 				cantidadElementosTablaSimbolos= agregarEnTS("main", anteriorPalabraLeida[0], palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
@@ -751,8 +751,16 @@ void agregarAPolaca(int indiceTS) {
 
 void agregarOperacionAPolaca(char * operacion) {
 
-	polacaAgregar(&polacaInv,operacion);
+	polacaAgregar(&polacaInv,operacion,'?');
 
 	debugMessageString("--- POLACA --- Agregando",operacion);
+	
+}
+
+int compareCaseInsensitive(char* cad1, char* cad2) {
+/* WINDOWS */
+//	return strcmpi(cad1,cad2);
+/* LINUX */ 
+	return strcasecmp(cad1,cad2);
 	
 }

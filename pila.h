@@ -32,14 +32,14 @@ int pilaVacia (struct pila * stack) {
 	}
 }
 
-void pilaExtraer(struct pila * stack, struct elementoPolaca & elemento) {
+void pilaExtraer(struct pila * stack, struct elementoPolaca * elemento) {
 
 	if(pilaVacia(stack)) {
 		printf("Error! Se quiso extraer de una pila vacía\n");
 		exit(1);
 	}
 	
-	elemento=stack->elementos[stack->cantidadElementosPila-1];
+	*elemento=stack->elementos[stack->cantidadElementosPila-1];
 	stack->cantidadElementosPila--;
 	
 	return ;
