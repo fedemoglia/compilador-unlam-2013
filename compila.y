@@ -43,69 +43,134 @@
 
 /* Reglas AS */
 %%
-PRG	: I_PROG  lista_declaraciones bloque_principal I_FINPROG;
-lista_declaraciones	: bloque_declaraciones | bloque_declaraciones lista_funciones;
-lista_funciones    :    funcion | lista_funciones funcion;
-bloque_principal	:	I_PROG_PRINCIPAL lista_sentencias I_FIN_PROG_PRINCIPAL;
+PRG: 
+	I_PROG lista_declaraciones bloque_principal I_FINPROG;
 
-lista_sentencias : sentencia | lista_sentencias sentencia;
+lista_declaraciones: 
+	bloque_declaraciones 
+	| bloque_declaraciones lista_funciones;
 
-bloque_declaraciones : OP_DECLARACION { abreBloqueDeclaracion(); } grupo_declaraciones  FIN_DEC { cierraBloqueDeclaracion(); } | ;
-grupo_declaraciones : declaracion | grupo_declaraciones declaracion;
-declaracion	:	 tipo { configurarTipoVariableDeclarada($1); } grupo_variables ;
-tipo	: 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
-funcion	:	INI_FUNCION declaracion_funcion bloque_declaraciones lista_sentencias retorno_funcion ;
-retorno_funcion : FIN_FUNCION ID_VAR;
-declaracion_funcion	:	ID_VAR SEPARADOR_DEC tipo;
-sentencia	:	asignacion |
-			condicional |
-			bucle |
-			output |
-			porcentaje;
-grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_LISTA_VARIABLES grupo_variables;
-asignacion	:	ID_VAR {  agregarAPolaca($1); } OP_ASIGNACION { agregarOperacionAPolaca("="); } 
-	mult_asignacion ;
-mult_asignacion	:	expresion | expresion OP_ASIGNACION { agregarOperacionAPolaca("="); } mult_asignacion ;
-expresion	:	termino | expresion OP_SUMA termino {
-	agregarOperacionAPolaca("+");
-}
-| expresion OP_RESTA termino {
-	agregarOperacionAPolaca("-");
-};
-termino	:	factor | termino OP_MULTIPLICACION factor {
-	agregarOperacionAPolaca("*");
-	}
+lista_funciones:
+	funcion 
+	|lista_funciones funcion;
+
+bloque_principal: 
+	I_PROG_PRINCIPAL lista_sentencias I_FIN_PROG_PRINCIPAL;
+
+lista_sentencias: 
+	sentencia 
+	| lista_sentencias sentencia;
+
+bloque_declaraciones : 
+	OP_DECLARACION {abreBloqueDeclaracion();} 
+	grupo_declaraciones 
+	FIN_DEC {cierraBloqueDeclaracion();} 
+	| ;
+
+grupo_declaraciones: 
+	declaracion 
+	| grupo_declaraciones declaracion;
 	
-| termino OP_DIVISION factor {
-{
-	printf("División: IndiceTS %d = IndiceTS %d\n",$1,$3);
-	agregarOperacionAPolaca("/");
+declaracion:
+	tipo { configurarTipoVariableDeclarada($1); } 
+	grupo_variables ;
+	
+tipo:
+	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
+	
+funcion:
+	INI_FUNCION declaracion_funcion bloque_declaraciones lista_sentencias retorno_funcion ;
+
+retorno_funcion: 
+	FIN_FUNCION ID_VAR;
+	
+declaracion_funcion:
+	ID_VAR SEPARADOR_DEC tipo;
+	
+sentencia:	
+	asignacion
+	| condicional
+	| bucle
+	| output
+	| porcentaje;
+	
+grupo_variables:
+	ID_VAR 
+	| ID_VAR SEPARADOR_LISTA_VARIABLES grupo_variables;
+	
+asignacion:
+	ID_VAR {  agregarAPolaca($1); } 
+	OP_ASIGNACION { agregarOperacionAPolaca("="); } 
+	mult_asignacion ;
+	
+mult_asignacion:
+	expresion 
+	| expresion OP_ASIGNACION { agregarOperacionAPolaca("="); } mult_asignacion ;
+	
+expresion:	
+	termino 
+	| expresion OP_SUMA termino {agregarOperacionAPolaca("+");}
+	| expresion OP_RESTA termino {agregarOperacionAPolaca("-");};
+	
+termino:
+	factor 
+	| termino OP_MULTIPLICACION factor {agregarOperacionAPolaca("*");}
+	| termino OP_DIVISION factor {
+		printf("División: IndiceTS %d = IndiceTS %d\n",$1,$3);
+		agregarOperacionAPolaca("/");
 	};
-}
-;
-factor	:	P_ABRE expresion P_CIERRE | constante_numerica {agregarAPolaca($1);}| ID_VAR {agregarAPolaca($1);} | CONST_STRING { agregarAPolaca($1); } ;
-bucle	:	I_BUCLE condicion lista_sentencias I_FINBUCLE ;
-condicional	:	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL ;
-condicion	:	P_ABRE comparacion P_CIERRE |
-			P_ABRE comparacion operador comparacion P_CIERRE ;
-operador	: 	OP_LOGICO_AND | OP_LOGICO_OR;
-comparacion	:	elemento OP_COMPARACION elemento {
- printf("Comparacion: %d con %d (comparacion %d)\n",$1,$3,$2);};
- |
-OP_LOGICO_PRE elemento OP_COMPARACION elemento {
-	printf("Comparacion negada: %d con %d (comparacion %d)\n",$2,$4,$3);};
-output		:	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {
-	printf("Output: %d\n",$3);
- };
-porcentaje			: PORCENTAJE P_ABRE expresion SEPARADOR_LISTA_VARIABLES expresion P_CIERRE;
-cadena_caracteres 	:	CONST_STRING {printf("CHK_PRINT. ");agregarAPolaca($1);} | ID_VAR {printf("CHK5");agregarAPolaca($1);};
-elemento	:	CONST_STRING |
-constante_numerica |
-ID_VAR {
-printf("CHK6");
-	agregarAPolaca($1);
-};
-constante_numerica	:	CONST_REAL | CONST_ENTERA ;
+		
+factor:	
+	P_ABRE expresion P_CIERRE 
+	| constante_numerica {agregarAPolaca($1);}
+	| ID_VAR {agregarAPolaca($1);} 
+	| CONST_STRING {agregarAPolaca($1);};
+	
+bucle:
+	I_BUCLE condicion lista_sentencias I_FINBUCLE ;
+	
+condicional:
+	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL ;
+	
+condicion:
+	P_ABRE comparacion P_CIERRE
+	| P_ABRE comparacion operador comparacion P_CIERRE ;
+	
+operador:
+	OP_LOGICO_AND 
+	| OP_LOGICO_OR;
+	
+comparacion:
+	elemento OP_COMPARACION elemento {printf("Comparacion: %d con %d (comparacion %d)\n",$1,$3,$2);};
+	| OP_LOGICO_PRE elemento OP_COMPARACION elemento {printf("Comparacion negada: %d con %d (comparacion %d)\n",$2,$4,$3);};
+	
+output:
+	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {printf("Output: %d\n",$3);};
+	
+porcentaje: 
+	PORCENTAJE P_ABRE expresion SEPARADOR_LISTA_VARIABLES expresion P_CIERRE;
+	
+cadena_caracteres:
+	CONST_STRING {
+		printf("CHK_PRINT. ");
+		agregarAPolaca($1);
+	} 
+	| ID_VAR {
+		printf("CHK5");
+		agregarAPolaca($1);
+	};
+
+elemento:
+	CONST_STRING
+	| constante_numerica 
+	| ID_VAR {
+		printf("CHK6");
+		agregarAPolaca($1);
+	};
+	
+constante_numerica:
+	CONST_REAL 
+	| CONST_ENTERA ;
 %%
 
 /***** VARIABLES GLOBALES *****/
