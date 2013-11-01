@@ -20,17 +20,16 @@ void polacaAgregar(struct polaca * pol,char * elemento, char tipo='?') {
 }
 
 
-void imprimePolaca(struct polaca pol)
+void imprimePolaca(struct polaca * pol)
 {
 	int i=0;
 	printf("Abriendo archivo de intermedia\n");
 	FILE *out = fopen("intermedia.txt","w");
-	printf("Abierto archivo de intermedia\n");
+	printf("Abierto archivo de intermedia. Volcando %d elementos \n",pol->cantidadElementos);
 	
-	while(i<pol.cantidadElementos)
+	while(i<pol->cantidadElementos)
 	{
-		printf("Agregando a intermedia\n");
-		fprintf(out,"%s %c\n",pol.elementos[i].elemento,pol.elementos[i].tipo);
+		fprintf(out,"%s (%c) \n",pol->elementos[i].elemento,pol->elementos[i].tipo);
 		i++;
 	}
 	

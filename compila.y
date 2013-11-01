@@ -58,40 +58,27 @@ sentencia	:	asignacion |
 			output |
 			porcentaje;
 grupo_variables	:	ID_VAR | ID_VAR SEPARADOR_LISTA_VARIABLES grupo_variables;
-asignacion	:	ID_VAR  OP_ASIGNACION mult_asignacion  {
-	printf("Asignacion: IndiceTS %d = IndiceTS %d\n",$1,$3);
-	};
-mult_asignacion	:	expresion | expresion OP_ASIGNACION mult_asignacion {
-printf("Asignacion (mult): IndiceTS %d = IndiceTS %d\n",$1,$3);
-	};
+asignacion	:	ID_VAR { agregarAPolaca($1); } OP_ASIGNACION { agregarOperacionAPolaca("="); } 
+	mult_asignacion ;
+mult_asignacion	:	expresion | expresion OP_ASIGNACION { agregarOperacionAPolaca("="); } mult_asignacion ;
 expresion	:	termino | expresion OP_SUMA termino {
-
-	printf("Suma: IndiceTS %d = IndiceTS %d\n",$1,$3);
-
+	agregarOperacionAPolaca("+");
 }
 | expresion OP_RESTA termino {
-
-	printf("Resta: IndiceTS %d = IndiceTS %d\n",$1,$3);
-
-
+	agregarOperacionAPolaca("-");
 };
 termino	:	factor | termino OP_MULTIPLICACION factor {
-{
-	printf("Multiplicacion: IndiceTS %d = IndiceTS %d\n",$1,$3);
-	agregarAPolaca("/");
+	agregarOperacionAPolaca("*");
 	}
-	;}
+	
 | termino OP_DIVISION factor {
 {
 	printf("División: IndiceTS %d = IndiceTS %d\n",$1,$3);
-	agregarAPolaca("*");
+	agregarOperacionAPolaca("/");
 	};
 }
 ;
-factor	:	P_ABRE expresion P_CIERRE | constante_numerica | ID_VAR {
-	
-}
-| CONST_STRING;
+factor	:	P_ABRE expresion P_CIERRE | constante_numerica {agregarAPolaca($1);}| ID_VAR {agregarAPolaca($1);} | CONST_STRING { agregarAPolaca($1); } ;
 bucle	:	I_BUCLE condicion lista_sentencias I_FINBUCLE ;
 condicional	:	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL ;
 condicion	:	P_ABRE comparacion P_CIERRE |
@@ -99,7 +86,6 @@ condicion	:	P_ABRE comparacion P_CIERRE |
 operador	: 	OP_LOGICO_AND | OP_LOGICO_OR;
 comparacion	:	elemento OP_COMPARACION elemento {
  printf("Comparacion: %d con %d (comparacion %d)\n",$1,$3,$2);};
-
  |
 OP_LOGICO_PRE elemento OP_COMPARACION elemento {
 	printf("Comparacion negada: %d con %d (comparacion %d)\n",$2,$4,$3);};
@@ -107,12 +93,14 @@ output		:	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {
 	printf("Output: %d\n",$3);
  };
 porcentaje			: PORCENTAJE P_ABRE expresion SEPARADOR_LISTA_VARIABLES expresion P_CIERRE;
-cadena_caracteres 	:	CONST_STRING | ID_VAR;
+cadena_caracteres 	:	CONST_STRING {printf("CHK4");agregarAPolaca($1);} | ID_VAR {printf("CHK5");agregarAPolaca($1);};
 elemento	:	CONST_STRING |
 constante_numerica |
-ID_VAR;
-constante_numerica	:	CONST_REAL |
-CONST_ENTERA;
+ID_VAR {
+printf("CHK6");
+	agregarAPolaca($1);
+};
+constante_numerica	:	CONST_REAL | CONST_ENTERA ;
 %%
 
 /***** VARIABLES GLOBALES *****/
@@ -206,7 +194,7 @@ int main(int argc, char *argv[]) {
     fclose(fuente);
 
 	escribirTSEnArchivo();
-//	imprimePolaca(polacaInv);
+	imprimePolaca(&polacaInv);
 }
 
 int yyerror(char *s) {
@@ -333,12 +321,12 @@ int determinarColumna(char c) {
 
 void abreBloqueDeclaracion() {
 
-	debugMessage("---- Abre Bloque Declaraciones ----");
+	debugMessage("--- DECLARACIONES --- Abre Bloque");
 	bloqueDeclaracionesActivo='y';
 }
 
 void cierraBloqueDeclaracion() {
-	debugMessage("---- Cierra Bloque Declaraciones ----\n");
+	debugMessage("--- DECLARACIONES --- Cierra Bloque");
 	bloqueDeclaracionesActivo='n';
 }
 
@@ -348,7 +336,7 @@ void configurarTipoVariableDeclarada(int idTokenTipoVariable) {
 		case TIPO_DATO_REAL: tipoVariableDeclarada='r'; break;
 		case TIPO_DATO_STRING: tipoVariableDeclarada='s'; break;
 	}
-	debugMessageInt("--- Configurado tipo de variable --- ",idTokenTipoVariable);
+	debugMessageInt("--- DECLARACIONES --- Configurado tipo de variable",idTokenTipoVariable);
 }
 
 int yylex()	{
@@ -418,12 +406,12 @@ void contId() {
 void finId() {
 	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
 
-	debugMessageString("Identificador leido",palabraLeida);
+	debugMessageString("--- INFO --- Identificador leido",palabraLeida);
 
 
 	// si es una palabra reservada
 	if(indicePalabraReservada != -1) {
-		debugMessageInt("INFO finId: Indice Palabra Reservada", indicePalabraReservada);
+		debugMessageInt("--- INFO --- finId: Indice Palabra Reservada", indicePalabraReservada);
 		tokenIdentificado = palabrasReservadas[indicePalabraReservada-1].valor;
 	} else {
 		/* Si no es una palabra reservada, la busca en la tabla de simbolos */
@@ -432,20 +420,24 @@ void finId() {
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
-			debugMessageString("Identificador no encontrado en tabla de símbolos",palabraLeida);
+			debugMessageString("--- INFO --- Identificador no encontrado en tabla de símbolos",palabraLeida);
 			if(bloqueDeclaracionesActivo=='y' || !strcmpi(anteriorPalabraLeida,"function")) {
 				// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones, crearla.
 				// FIXME El ámbito y el tipo están fijados
 				cantidadElementosTablaSimbolos= agregarEnTS("main", anteriorPalabraLeida[0], palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
 				yylval = cantidadElementosTablaSimbolos;
-				debugMessageString("Agregando a tabla de símbolos",palabraLeida);
+				debugMessageString("--- INFO --- Agregando a tabla de símbolos",palabraLeida);
 			}
 			else {
-				debugMessageString("Error, se intento usar el identificador antes de definirlo",palabraLeida);
+				char mensajeError[100];
+				strcpy(mensajeError,"Error, se intento usar el identificador antes de definirlo: ");
+				strcat(mensajeError,palabraLeida);
+				compilationError(mensajeError);
+				
 			}
 		}
 		else {
-			debugMessageInt("Indice en tabla de símbolos",indicePalabraEnTablaDeSimbolos);
+			debugMessageInt("--- INFO --- Indice en tabla de símbolos",indicePalabraEnTablaDeSimbolos);
 			yylval = indicePalabraEnTablaDeSimbolos;
 			}
 		tokenIdentificado = ID_VAR;
@@ -464,7 +456,7 @@ void contCte() {
 
 void finCteEntera() {
 	// FIXME Falta validar el tamaño maximo de una variable entera.
-	debugMessageString("Constante entera leída",palabraLeida);
+	debugMessageString("--- DEBUG --- Constante entera leída",palabraLeida);
 	
 	int tamPalabraLeida = strlen(palabraLeida);
 	char nombreConstante[tamPalabraLeida+1] ;
@@ -476,12 +468,15 @@ void finCteEntera() {
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS("main",nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
-			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
+			debugMessageString("--- DEBUG --- Constante no encontrada en tabla de símbolos",palabraLeida);
 					
 			cantidadElementosTablaSimbolos = agregarEnTS("main", 'e', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
 			yylval = cantidadElementosTablaSimbolos;
-			debugMessageString("Agregando constante entera a tabla de símbolos",nombreConstante);
-		}	
+			debugMessageString("--- DEBUG --- Agregando constante entera a tabla de símbolos",nombreConstante);
+		}
+		else {
+			yylval = cantidadElementosTablaSimbolos;
+		}		
 		tokenIdentificado = CONST_ENTERA;
 	} else {
 		compilationError("La constante entera supera el máximo permitido");
@@ -669,15 +664,25 @@ void setNombreConstante(char * constante, char * nombreConstante) {
 /* Funciones de Polaca */
 
 void agregarAPolaca(int indiceTS) {
-	
+
 	//FIXME Ámbito hardcodeado
-	printf("Agregando a polaca %d. %s\n",indiceTS,tablaSimbolos[indiceTS].nombre);
+	char mensajeAgregadoPolaca[200];
+	sprintf(mensajeAgregadoPolaca,"--- POLACA --- Agregando indice %d",indiceTS);
+	debugMessageString(mensajeAgregadoPolaca,tablaSimbolos[indiceTS].nombre);
 	
 	if(indiceTS!=-1) {
 		polacaAgregar(&polacaInv,tablaSimbolos[indiceTS].nombre,tablaSimbolos[indiceTS].tipo);
-		debugMessageString("Agregado ID a polaca inversa: ",tablaSimbolos[indiceTS].nombre);
 	}
 	else {
 		// TODO Puede darse este caso? Es decir, que se llegue acá con un identificador que no esté en la TS
 	}
+}
+
+
+void agregarOperacionAPolaca(char * operacion) {
+
+	polacaAgregar(&polacaInv,operacion);
+
+	debugMessageString("--- POLACA --- Agregando",operacion);
+	
 }
