@@ -495,7 +495,7 @@ void finId() {
 				// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones, crearla.
 				// FIXME El ámbito y el tipo están fijados
 				cantidadElementosTablaSimbolos= agregarEnTS("main", anteriorPalabraLeida[0], palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
-				yylval = cantidadElementosTablaSimbolos;
+				yylval = cantidadElementosTablaSimbolos - 1;
 				debugMessageString("--- INFO --- Agregando a tabla de símbolos",palabraLeida);
 			}
 			else {
@@ -541,7 +541,7 @@ void finCteEntera() {
 			debugMessageString("--- DEBUG --- Constante no encontrada en tabla de símbolos",palabraLeida);
 					
 			cantidadElementosTablaSimbolos = agregarEnTS("main", 'e', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
-			yylval = cantidadElementosTablaSimbolos;
+			yylval = cantidadElementosTablaSimbolos - 1;
 			debugMessageString("--- DEBUG --- Agregando constante entera a tabla de símbolos",nombreConstante);
 		}
 		else {
@@ -570,7 +570,7 @@ void finCteReal() {
 			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
 					
 			cantidadElementosTablaSimbolos = agregarEnTS("main", 'r', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
-			yylval = cantidadElementosTablaSimbolos;
+			yylval = cantidadElementosTablaSimbolos - 1;
 			debugMessageString("Agregando constante real a tabla de símbolos",nombreConstante);
 		}
 		
@@ -606,7 +606,7 @@ void finCadena() {
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
 			cantidadElementosTablaSimbolos= agregarEnTS("main", 's', nombreConstante, palabraLeida, tablaSimbolos, cantidadElementosTablaSimbolos);
-			yylval = cantidadElementosTablaSimbolos;
+			yylval = cantidadElementosTablaSimbolos - 1;
 			debugMessageString("Agregando constante a tabla de símbolos",nombreConstante);
 		}
 		tokenIdentificado = CONST_STRING;
