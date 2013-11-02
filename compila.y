@@ -10,6 +10,10 @@
 #include "polaca.h"
 	#define POLACA_H
 #endif
+#ifndef PILA_H
+#include "pila.h"
+	#define PILA_H
+#endif
 
 
 #define CANTIDAD_ESTADOS 25
@@ -102,22 +106,22 @@ grupo_variables:
 asignacion:
 	ID_VAR {  agregarAPolaca($1); } 
 	OP_ASIGNACION  
-	mult_asignacion { agregarOperacionAPolaca("="); };
+	mult_asignacion { agregarOperacionAPolaca("=",-1); };
 	
 mult_asignacion:
 	expresion
-	| expresion OP_ASIGNACION mult_asignacion { agregarOperacionAPolaca("="); };
+	| expresion OP_ASIGNACION mult_asignacion { agregarOperacionAPolaca("=",-1); };
 	
 expresion:	
 	termino 
-	| expresion OP_SUMA termino {agregarOperacionAPolaca("+");}
-	| expresion OP_RESTA termino {agregarOperacionAPolaca("-");};
+	| expresion OP_SUMA termino {agregarOperacionAPolaca("+",-1);}
+	| expresion OP_RESTA termino {agregarOperacionAPolaca("-",-1);};
 	
 termino:
 	factor 
-	| termino OP_MULTIPLICACION factor {agregarOperacionAPolaca("*");}
+	| termino OP_MULTIPLICACION factor {agregarOperacionAPolaca("*",-1);}
 | termino OP_DIVISION factor {
-		agregarOperacionAPolaca("/");
+		agregarOperacionAPolaca("/",-1);
 	};
 		
 factor:	
@@ -130,11 +134,18 @@ bucle:
 	I_BUCLE condicion lista_sentencias I_FINBUCLE ;
 	
 condicional:
-	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL ;
+	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL { 
+		agregarSaltoFinCondicional();
+		
+	};
 	
 condicion:
-	P_ABRE OP_LOGICO_PRE comparacion P_CIERRE
-	| P_ABRE comparacion P_CIERRE
+	P_ABRE OP_LOGICO_PRE comparacion P_CIERRE {
+		agregarSaltoFinComparacion();
+	}
+	| P_ABRE comparacion P_CIERRE {
+		agregarSaltoFinComparacion();
+	}
 	| P_ABRE comparacion operador comparacion P_CIERRE ;
 	
 operador:
@@ -142,24 +153,24 @@ operador:
 	| OP_LOGICO_OR;
 	
 comparacion:
-	expresion OP_COMP_MAYOR expresion { agregarOperacionAPolaca("JBE"); }
+	expresion OP_COMP_MAYOR expresion { configurarTipoComparacion("JBE"); }
 
-	| expresion OP_COMP_MENOR expresion { agregarOperacionAPolaca("JAE"); }
+	| expresion OP_COMP_MENOR expresion {   configurarTipoComparacion("JAE"); }
 
-	| expresion OP_COMP_MAYOR_IGUAL expresion { agregarOperacionAPolaca("JB"); }
+	| expresion OP_COMP_MAYOR_IGUAL expresion {   configurarTipoComparacion("JB"); }
 
-	| expresion OP_COMP_MENOR_IGUAL expresion { agregarOperacionAPolaca("JA"); }
+	| expresion OP_COMP_MENOR_IGUAL expresion {  configurarTipoComparacion("JA"); }
 
-	| expresion OP_COMP_IGUAL expresion { agregarOperacionAPolaca("JNE"); }
+	| expresion OP_COMP_IGUAL expresion {   configurarTipoComparacion("JNE"); }
 
-	| expresion OP_COMP_DISTINTO expresion { agregarOperacionAPolaca("JE"); }
+	| expresion OP_COMP_DISTINTO expresion {  configurarTipoComparacion("JE"); }
 ;
 	
 output:
-	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {printf("Output: %d\n",$3);agregarOperacionAPolaca("PRINT");};
+	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {printf("Output: %d\n",$3);agregarOperacionAPolaca("PRINT",-1);};
 	
 porcentaje: 
-	PORCENTAJE P_ABRE expresion {agregarAPolaca(100); agregarOperacionAPolaca("/");} SEPARADOR_LISTA_VARIABLES expresion {agregarOperacionAPolaca("*");} P_CIERRE;
+	PORCENTAJE P_ABRE expresion {agregarAPolaca(100); agregarOperacionAPolaca("/",-1);} SEPARADOR_LISTA_VARIABLES expresion {agregarOperacionAPolaca("*",-1);} P_CIERRE;
 	
 cadena_caracteres:
 	CONST_STRING {
@@ -188,6 +199,7 @@ char ambitoActual[30] = "main";
 
 char modoDebug='n';
 char bloqueDeclaracionesActivo='n';
+char tipoComparacion[5];
 
 int yyparse();
 int yylex();
@@ -227,12 +239,15 @@ void debugMessageString(char * , char *);
 void debugMessage(char *);
 void compilationError(char *);
 
+
+void agregarAPolaca(int);
 void escribirTSEnArchivo();
 void setNombreConstante(char *, char *);
 
 int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
-struct pila polacaInv;
+colaPolaca polacaInv;
+pilaEnteros pilaSaltos;
 
 int main(int argc, char *argv[]) {
 	char input[20];
@@ -251,7 +266,8 @@ int main(int argc, char *argv[]) {
 		exit(0);
     }
 	
-	polacaInv.cantidadElementosPila=0;
+	polacaInv.cantidadElementosCola=0;
+	pilaSaltos.cantidadElementosPila=0;
 	
 	printf("Modo Debug? (y/n)");
 	modoDebug = getchar();
@@ -415,6 +431,34 @@ void configurarTipoVariableDeclarada(int idTokenTipoVariable) {
 	}
 	debugMessageInt("--- DECLARACIONES --- Configurado tipo de variable",idTokenTipoVariable);
 }
+
+void configurarTipoComparacion (char * tipoComp) {
+	strcpy(tipoComparacion,tipoComp);
+}
+
+void agregarSaltoFinComparacion() {
+	agregarPosicionAPilaDeSaltos(+1);
+	agregarOperacionAPolaca("CMP",-1);
+	agregarOperacionAPolaca("_",-1); // Dejo una celda en blanco para llenar con la posicion a la que voy a saltar
+	agregarOperacionAPolaca(tipoComparacion,-1);
+}
+
+void agregarSaltoFinCondicional() {
+	int posicionDireccionSalto;
+	pilaExtraer(&pilaSaltos,&posicionDireccionSalto);
+	
+	char posicionStr[30];
+	
+	itoa(polacaInv.cantidadElementosCola-1,posicionStr,10);
+	agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
+	}
+
+void agregarPosicionAPilaDeSaltos(int adicional) {
+		int posActual = polacaInv.cantidadElementosCola;
+		posActual += adicional;
+		pilaEmpujar(&pilaSaltos, posActual);
+		printf("!!EMPUJANDO: %d\n",posActual);
+	}
 
 int yylex()	{
 	int cant=0;
@@ -769,7 +813,7 @@ void agregarAPolaca(int indiceTS) {
 	debugMessageString(mensajeAgregadoPolaca,tablaSimbolos[indiceTS].nombre);
 	
 	if(indiceTS!=-1) {
-		polacaAgregar(&polacaInv,tablaSimbolos[indiceTS].nombre,tablaSimbolos[indiceTS].tipo);
+		polacaAgregar(&polacaInv,tablaSimbolos[indiceTS].nombre,tablaSimbolos[indiceTS].tipo,-1);
 	}
 	else {
 		// TODO Puede darse este caso? Es decir, que se llegue acá con un identificador que no esté en la TS
@@ -777,9 +821,9 @@ void agregarAPolaca(int indiceTS) {
 }
 
 
-void agregarOperacionAPolaca(char * operacion) {
+void agregarOperacionAPolaca(char * operacion, int posicion) {
 
-	polacaAgregar(&polacaInv,operacion,'?');
+	polacaAgregar(&polacaInv,operacion,'?',posicion);
 
 	debugMessageString("--- POLACA --- Agregando",operacion);
 	
