@@ -9,7 +9,7 @@ struct elementoTablaSimbolos
 	int eliminado;
 };
 
-int buscarEnTS(char* ambito, char* nombre, struct elementoTablaSimbolos * tablaSimbolos, int largoTablaSimbolos) {
+int buscarEnTS(char* ambito, char* nombre, char bloqueDeclaracionesActivo, struct elementoTablaSimbolos * tablaSimbolos, int largoTablaSimbolos) {
 	int i=0;
 	while(i<largoTablaSimbolos) {
 		struct elementoTablaSimbolos elemento = tablaSimbolos[i];
@@ -18,13 +18,12 @@ int buscarEnTS(char* ambito, char* nombre, struct elementoTablaSimbolos * tablaS
 		}
 		i++;
 	}
-
-	if(strcmp(ambito,"main")==0) {
+	if(strcmp(ambito,"main")==0 || bloqueDeclaracionesActivo == 'y') {
 		return -1;
 	}
 	else {
 		// recursividad para volver a llamar a la funcion para buscar en el ambito main, si se estaba en una funcion.
-		return buscarEnTS("main",nombre,tablaSimbolos,largoTablaSimbolos);
+		return buscarEnTS("main",nombre,bloqueDeclaracionesActivo,tablaSimbolos,largoTablaSimbolos);
 	}
 }
 
@@ -66,8 +65,8 @@ int agregarEnTS(char * ambito, char tipo, char * nombre, void * valor, struct el
 	return cantidadElementosTablaSimbolos;
 }
 
-int eliminarDeTS(char * ambito, char * nombre, struct elementoTablaSimbolos * tablaSimbolos, int cantidadElementosTablaSimbolos) {
-	int indiceElemento = buscarEnTS(ambito,nombre,tablaSimbolos, cantidadElementosTablaSimbolos);
+int eliminarDeTS(char * ambito, char * nombre, char bloqueDeclaracionesActivo, struct elementoTablaSimbolos * tablaSimbolos, int cantidadElementosTablaSimbolos) {
+	int indiceElemento = buscarEnTS(ambito, nombre, bloqueDeclaracionesActivo, tablaSimbolos, cantidadElementosTablaSimbolos);
 
 	/* Si el elemento existe, lo marca como eliminado */
 	if(indiceElemento!=-1) {

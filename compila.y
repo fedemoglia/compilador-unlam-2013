@@ -87,7 +87,7 @@ funcion:
 	INI_FUNCION declaracion_funcion bloque_declaraciones lista_sentencias retorno_funcion ;
 
 retorno_funcion: 
-	FIN_FUNCION ID_VAR;
+	FIN_FUNCION cadena_caracteres | FIN_FUNCION constante_numerica;
 	
 declaracion_funcion:
 	ID_VAR SEPARADOR_DEC tipo;
@@ -528,8 +528,9 @@ void finId() {
 	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
 
 	debugMessageString("--- INFO --- Identificador leido",palabraLeida);
-
-
+	if (!compareCaseInsensitive(palabraLeida,"main")){
+			strcpy(ambitoActual,"main");
+	}
 	// si es una palabra reservada
 	if(indicePalabraReservada != -1) {
 		debugMessageInt("--- INFO --- finId: Indice Palabra Reservada", indicePalabraReservada);
@@ -538,13 +539,14 @@ void finId() {
 	} else {
 		int esFuncion = !compareCaseInsensitive(anteriorPalabraLeida,"function");
 		/* Si no es una palabra reservada, la busca en la tabla de simbolos */
-		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
-
-
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,palabraLeida,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("--- INFO --- Identificador no encontrado en tabla de símbolos",palabraLeida);
+			// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones o es una función, crearla.
 			if(bloqueDeclaracionesActivo=='y' || esFuncion) {
-				// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones, crearla.
+				if(esFuncion){
+					strcpy(ambitoActual,"main"); 
+				}
 				cantidadElementosTablaSimbolos= agregarEnTS(ambitoActual, tolower(anteriorPalabraLeida[0]), palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
 				yylval = cantidadElementosTablaSimbolos - 1;
 				debugMessageString("--- INFO --- Agregando a tabla de símbolos",palabraLeida);
@@ -578,7 +580,6 @@ void contCte() {
 }
 
 void finCteEntera() {
-	// FIXME Falta validar el tamaño maximo de una variable entera.
 	debugMessageString("--- DEBUG --- Constante entera leída",palabraLeida);
 	
 	int tamPalabraLeida = strlen(palabraLeida);
@@ -587,11 +588,10 @@ void finCteEntera() {
 	int valorConstante = atoi(palabraLeida);
 	
 	if(valorConstante <= TAM_MAX_CTE_ENTERA) {	
-		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
-			debugMessageString("--- DEBUG --- Constante no encontrada en tabla de símbolos",palabraLeida);
-					
+			debugMessageString("--- DEBUG --- Constante no encontrada en tabla de símbolos",palabraLeida);	
 			cantidadElementosTablaSimbolos = agregarEnTS(ambitoActual, 'i', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
 			yylval = cantidadElementosTablaSimbolos - 1;
 			debugMessageString("--- DEBUG --- Agregando constante entera a tabla de símbolos",nombreConstante);
@@ -616,11 +616,10 @@ void finCteReal() {
 	float valorConstante = atof(palabraLeida);
 	
 	if(valorConstante <= TAM_MAX_CTE_REAL) {
-		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
-			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
-					
+			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);	
 			cantidadElementosTablaSimbolos = agregarEnTS(ambitoActual, 'r', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
 			yylval = cantidadElementosTablaSimbolos - 1;
 			debugMessageString("Agregando constante real a tabla de símbolos",nombreConstante);
@@ -650,10 +649,8 @@ void finCadena() {
 	int tamPalabraLeida = strlen(palabraLeida);
 	if(tamPalabraLeida <= LARGO_MAXIMO_CTE_STRING) {
 		char nombreConstante[tamPalabraLeida+1] ;
-		setNombreConstante(palabraLeida, nombreConstante);
-		
-		// FIXME Habría que cambiar el ambito que está fijado
-		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
+		setNombreConstante(palabraLeida, nombreConstante);	
+		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
@@ -790,7 +787,7 @@ void escribirTSEnArchivo() {
 			fprintf(tsFile, "   Valor: %f\n", tablaSimbolos[i].valorReal);
 		} else if(tablaSimbolos[i].tipo == 'f') {
 			fprintf(tsFile, "   Tipo: función\n");
-			fprintf(tsFile, "   Valor: %f\n", tablaSimbolos[i].valorString);
+			fprintf(tsFile, "   Valor: %s\n", tablaSimbolos[i].valorString);
 		}
 		fprintf(tsFile, "   Eliminado: %d\n\n", tablaSimbolos[i].eliminado);
 	}
