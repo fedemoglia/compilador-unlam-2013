@@ -48,7 +48,7 @@ int agregarEnTS(char * ambito, char tipo, char * nombre, void * valor, struct el
 			elemento.valorReal = 0;
 		break;
 
-		case 'e': // Entero
+		case 'i': // Entero
 			elemento.valorEntero = *((int *)valor);
 			elemento.valorReal = 0;
 			strcpy(elemento.valorString,"");

@@ -48,8 +48,8 @@ void pilaExtraer(struct pila * stack, struct elementoPolaca * elemento) {
 void imprimirPila(struct pila  * stack) {
 	printf("\n===VOLCADO DE PILA=== \n");
 	int i=stack->cantidadElementosPila;
-	while(i>=0) {
-		struct elementoPolaca elem = stack->elementos[i];
+	while(i>0) {
+		struct elementoPolaca elem = stack->elementos[i-1];
 		struct elementoPolaca elemInv = stack->elementos[stack->cantidadElementosPila-i];
 		printf("%s (%c)\tR - %s (%c)\n",elem.elemento,elem.tipo,elemInv.elemento,elemInv.tipo);	
 		i--;
