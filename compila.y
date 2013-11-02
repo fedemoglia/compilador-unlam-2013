@@ -7,7 +7,7 @@
 #include "tablaSimbolos.h"
 
 #ifndef POLACA_H
-	#include "polaca.h"
+#include "polaca.h"
 	#define POLACA_H
 #endif
 
@@ -18,7 +18,7 @@
 #define LARGO_MAXIMO_CTE_STRING 30
 #define CANT_PALABRAS_RESERVADAS 21
 #define TAM_MAX_CTE_REAL 9999 // TODO Definir número real.
-#define TAM_MAX_CTE_ENTERA 9999 // TODO Definir número real.
+#define TAM_MAX_CTE_ENTERA 65535
 
 
 %}
@@ -71,7 +71,7 @@ bloque_declaraciones :
 grupo_declaraciones: 
 	declaracion 
 	| grupo_declaraciones declaracion;
-	
+
 declaracion:
 	tipo { configurarTipoVariableDeclarada($1); } 
 	grupo_variables ;
@@ -116,7 +116,7 @@ expresion:
 termino:
 	factor 
 	| termino OP_MULTIPLICACION factor {agregarOperacionAPolaca("*");}
-	| termino OP_DIVISION factor {
+| termino OP_DIVISION factor {
 		agregarOperacionAPolaca("/");
 	};
 		
@@ -153,18 +153,18 @@ comparacion:
 	| expresion OP_COMP_IGUAL expresion { agregarOperacionAPolaca("JNE"); }
 
 	| expresion OP_COMP_DISTINTO expresion { agregarOperacionAPolaca("JE"); }
-	;
+;
 	
 output:
-	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {printf("Output: %d\n",$3);};
+	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {printf("Output: %d\n",$3);agregarOperacionAPolaca("PRINT");};
 	
 porcentaje: 
-	PORCENTAJE P_ABRE expresion SEPARADOR_LISTA_VARIABLES expresion P_CIERRE;
+	PORCENTAJE P_ABRE expresion {agregarAPolaca(100); agregarOperacionAPolaca("/");} SEPARADOR_LISTA_VARIABLES expresion {agregarOperacionAPolaca("*");} P_CIERRE;
 	
 cadena_caracteres:
 	CONST_STRING {
 		agregarAPolaca($1);
-	} 
+}
 	| ID_VAR {
 		agregarAPolaca($1);
 	};
@@ -184,7 +184,7 @@ int estado;
 char caracterLeido;
 FILE *fuente;
 int linea = 0;
-char ambitoActual[112] = "main";
+char ambitoActual[30] = "main";
 
 char modoDebug='n';
 char bloqueDeclaracionesActivo='n';
@@ -492,18 +492,15 @@ void finId() {
 		tokenIdentificado = palabrasReservadas[indicePalabraReservada-1].valor;
 		strcpy(anteriorPalabraLeida,palabraLeida);
 	} else {
+		int esFuncion = !compareCaseInsensitive(anteriorPalabraLeida,"function");
 		/* Si no es una palabra reservada, la busca en la tabla de simbolos */
-
-		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
 
-		
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("--- INFO --- Identificador no encontrado en tabla de símbolos",palabraLeida);
-			if(bloqueDeclaracionesActivo=='y' || !compareCaseInsensitive(anteriorPalabraLeida,"function")) {
+			if(bloqueDeclaracionesActivo=='y' || esFuncion) {
 				// Si la palabra no está en la tabla de símbolos y estamos en bloque de declaraciones, crearla.
-				// FIXME El ámbito y el tipo están fijados
 				cantidadElementosTablaSimbolos= agregarEnTS(ambitoActual, tolower(anteriorPalabraLeida[0]), palabraLeida, "VALOR", tablaSimbolos, cantidadElementosTablaSimbolos);
 				yylval = cantidadElementosTablaSimbolos - 1;
 				debugMessageString("--- INFO --- Agregando a tabla de símbolos",palabraLeida);
@@ -513,7 +510,6 @@ void finId() {
 				strcpy(mensajeError,"Error, se intento usar el identificador antes de definirlo: ");
 				strcat(mensajeError,palabraLeida);
 				compilationError(mensajeError);
-				
 			}
 		}
 		else {
@@ -521,8 +517,7 @@ void finId() {
 			yylval = indicePalabraEnTablaDeSimbolos;
 			}
 		/*Si el id leído antes es "function" se cambia el ámbito al nombre de la nueva función*/
-
-		if(!compareCaseInsensitive(anteriorPalabraLeida,"function")){
+		if(esFuncion){
 			strcpy(ambitoActual, palabraLeida);
 		}
 		tokenIdentificado = ID_VAR;
@@ -548,7 +543,6 @@ void finCteEntera() {
 	int valorConstante = atoi(palabraLeida);
 	
 	if(valorConstante <= TAM_MAX_CTE_ENTERA) {	
-		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
@@ -559,8 +553,9 @@ void finCteEntera() {
 			debugMessageString("--- DEBUG --- Agregando constante entera a tabla de símbolos",nombreConstante);
 		}
 		else {
+			cantidadElementosTablaSimbolos = agregarEnTS(ambitoActual, 'i', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
 			yylval = cantidadElementosTablaSimbolos;
-		}		
+		}	
 		tokenIdentificado = CONST_ENTERA;
 	} else {
 		compilationError("La constante entera supera el máximo permitido");
@@ -577,7 +572,6 @@ void finCteReal() {
 	float valorConstante = atof(palabraLeida);
 	
 	if(valorConstante <= TAM_MAX_CTE_REAL) {
-		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
@@ -768,7 +762,7 @@ void setNombreConstante(char * constante, char * nombreConstante) {
 /* Funciones de Polaca */
 
 void agregarAPolaca(int indiceTS) {
-
+	
 	//FIXME Ámbito hardcodeado
 	char mensajeAgregadoPolaca[200];
 	sprintf(mensajeAgregadoPolaca,"--- POLACA --- Agregando indice %d",indiceTS);
@@ -793,7 +787,7 @@ void agregarOperacionAPolaca(char * operacion) {
 
 int compareCaseInsensitive(char* cad1, char* cad2) {
 /* WINDOWS */
-//	return strcmpi(cad1,cad2);
+	return strcmpi(cad1,cad2);
 /* LINUX */ 
-	return strcasecmp(cad1,cad2);	
+//	return strcasecmp(cad1,cad2);	
 }
