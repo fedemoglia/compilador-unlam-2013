@@ -184,7 +184,7 @@ int estado;
 char caracterLeido;
 FILE *fuente;
 int linea = 0;
-char * ambitoActual = "main";
+char ambitoActual[112] = "main";
 
 char modoDebug='n';
 char bloqueDeclaracionesActivo='n';
@@ -497,6 +497,8 @@ void finId() {
 		// FIXME Habría que cambiar el ambito que está fijado
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,palabraLeida,tablaSimbolos,cantidadElementosTablaSimbolos);
 
+		
+
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("--- INFO --- Identificador no encontrado en tabla de símbolos",palabraLeida);
 			if(bloqueDeclaracionesActivo=='y' || !compareCaseInsensitive(anteriorPalabraLeida,"function")) {
@@ -519,6 +521,7 @@ void finId() {
 			yylval = indicePalabraEnTablaDeSimbolos;
 			}
 		/*Si el id leído antes es "function" se cambia el ámbito al nombre de la nueva función*/
+
 		if(!compareCaseInsensitive(anteriorPalabraLeida,"function")){
 			strcpy(ambitoActual, palabraLeida);
 		}
@@ -792,6 +795,5 @@ int compareCaseInsensitive(char* cad1, char* cad2) {
 /* WINDOWS */
 //	return strcmpi(cad1,cad2);
 /* LINUX */ 
-	return strcasecmp(cad1,cad2);
-	
+	return strcasecmp(cad1,cad2);	
 }
