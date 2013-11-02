@@ -133,7 +133,8 @@ condicional:
 	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL ;
 	
 condicion:
-	P_ABRE comparacion P_CIERRE
+	P_ABRE OP_LOGICO_PRE comparacion P_CIERRE
+	| P_ABRE comparacion P_CIERRE
 	| P_ABRE comparacion operador comparacion P_CIERRE ;
 	
 operador:
@@ -141,23 +142,17 @@ operador:
 	| OP_LOGICO_OR;
 	
 comparacion:
-	expresion OP_COMP_MAYOR expresion { }
-	| OP_LOGICO_PRE expresion OP_COMP_MAYOR expresion { }
+	expresion OP_COMP_MAYOR expresion { agregarOperacionAPolaca("JBE"); }
 
-	| expresion OP_COMP_MENOR expresion { }
-	| OP_LOGICO_PRE expresion OP_COMP_MENOR expresion { }
+	| expresion OP_COMP_MENOR expresion { agregarOperacionAPolaca("JAE"); }
 
-	| expresion OP_COMP_MAYOR_IGUAL expresion { }
-	| OP_LOGICO_PRE expresion OP_COMP_MAYOR_IGUAL expresion { }
+	| expresion OP_COMP_MAYOR_IGUAL expresion { agregarOperacionAPolaca("JB"); }
 
-	| expresion OP_COMP_MENOR_IGUAL expresion { }
-	| OP_LOGICO_PRE expresion OP_COMP_MENOR_IGUAL expresion { }
+	| expresion OP_COMP_MENOR_IGUAL expresion { agregarOperacionAPolaca("JA"); }
 
-	| expresion OP_COMP_IGUAL expresion { }
-	| OP_LOGICO_PRE expresion OP_COMP_IGUAL expresion { }
+	| expresion OP_COMP_IGUAL expresion { agregarOperacionAPolaca("JNE"); }
 
-	| expresion OP_COMP_DISTINTO expresion { }
-	| OP_LOGICO_PRE expresion OP_COMP_DISTINTO expresion { }
+	| expresion OP_COMP_DISTINTO expresion { agregarOperacionAPolaca("JE"); }
 	;
 	
 output:
