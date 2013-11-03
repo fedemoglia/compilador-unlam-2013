@@ -239,7 +239,7 @@ void debugMessageInt(char * , int );
 void debugMessageString(char * , char *);
 void debugMessage(char *);
 void compilationError(char *);
-
+char* encontrarSaltoNegado(char*);
 
 void agregarAPolaca(int);
 void escribirTSEnArchivo();
@@ -856,7 +856,7 @@ void agregarOperacionAPolaca(char * operacion, int posicion) {
 
 int compareCaseInsensitive(char* cad1, char* cad2) {
 /* WINDOWS */
-	return strcmpi(cad1,cad2);
+//	return strcmpi(cad1,cad2);
 /* LINUX */ 
-//	return strcasecmp(cad1,cad2);	
+	return strcasecmp(cad1,cad2);	
 }
