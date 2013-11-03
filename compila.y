@@ -484,7 +484,7 @@ void agregarSaltoFinBucle() {
 	char posicionStr[30];
 	
 	// -- CONDICIONES DE DECISION --
-	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola-1);
+	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola+2);
 	agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
 
 	// -- SALTO DE NUEVO A PRIMER COMPARACION (WHILE) --
