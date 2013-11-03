@@ -171,7 +171,7 @@ output:
 	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {printf("Output: %d\n",$3);agregarOperacionAPolaca("PRINT",-1);};
 	
 porcentaje: 
-	PORCENTAJE P_ABRE expresion {agregarAPolaca(100); agregarOperacionAPolaca("/",-1);} SEPARADOR_LISTA_VARIABLES expresion {agregarOperacionAPolaca("*",-1);} P_CIERRE;
+	PORCENTAJE P_ABRE expresion SEPARADOR_LISTA_VARIABLES expresion P_CIERRE {agregarOperacionAPolaca("PERCENT",-1);};
 	
 cadena_caracteres:
 	CONST_STRING {
