@@ -47,7 +47,7 @@ void imprimirCola(colaPolaca * stack) {
 	printf("\n===VOLCADO DE POLACA=== \n");
 	int i=0;
 	while(i<stack->cantidadElementosCola) {
-		struct elementoPolaca elem = stack->elementos[i-1];
+		struct elementoPolaca elem = stack->elementos[i];
 		printf("POS: %d - %s (%c)\n",i,elem.elemento,elem.tipo);	
 		i++;
 	} 
