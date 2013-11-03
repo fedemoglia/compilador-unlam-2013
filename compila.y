@@ -23,6 +23,7 @@
 #define CANT_PALABRAS_RESERVADAS 20
 #define TAM_MAX_CTE_REAL 9999 // TODO Definir número real.
 #define TAM_MAX_CTE_ENTERA 65535
+#define CANT_TIPOS_COMPARACION 6
 
 
 %}
@@ -120,7 +121,7 @@ expresion:
 termino:
 	factor 
 	| termino OP_MULTIPLICACION factor {agregarOperacionAPolaca("*",-1);}
-| termino OP_DIVISION factor {
+	| termino OP_DIVISION factor {
 		agregarOperacionAPolaca("/",-1);
 	};
 		
@@ -141,10 +142,10 @@ condicional:
 	
 condicion:
 	P_ABRE OP_LOGICO_PRE comparacion P_CIERRE {
-		agregarSaltoFinComparacion();
+		agregarSaltoFinComparacion("NOT");
 	}
 	| P_ABRE comparacion P_CIERRE {
-		agregarSaltoFinComparacion();
+		agregarSaltoFinComparacion("");
 	}
 	| P_ABRE comparacion operador comparacion P_CIERRE ;
 	
@@ -377,6 +378,18 @@ struct {
 	"percent", PORCENTAJE,
 };
 
+struct {
+	char salto[4];
+	char saltoNegado[4];
+} saltos [CANT_TIPOS_COMPARACION] = {
+	"JA", "JBE",
+	"JB", "JAE",
+	"JE", "JNE",
+	"JBE", "JA",
+	"JAE", "JB",
+	"JNE", "JE"	
+};
+
 int determinarColumna(char c) {
 	int columna=-1;
 	if(isalpha(c)) columna=0;
@@ -436,11 +449,26 @@ void configurarTipoComparacion (char * tipoComp) {
 	strcpy(tipoComparacion,tipoComp);
 }
 
-void agregarSaltoFinComparacion() {
+void agregarSaltoFinComparacion(char * operador) {
 	agregarPosicionAPilaDeSaltos(+1);
 	agregarOperacionAPolaca("CMP",-1);
 	agregarOperacionAPolaca("_",-1); // Dejo una celda en blanco para llenar con la posicion a la que voy a saltar
-	agregarOperacionAPolaca(tipoComparacion,-1);
+	if(compareCaseInsensitive(operador,"NOT")){
+		agregarOperacionAPolaca(tipoComparacion,-1);
+	} else {
+		agregarOperacionAPolaca(encontrarSaltoNegado(tipoComparacion),-1);
+	}
+}
+
+char* encontrarSaltoNegado(char* tipoComparacion){
+	int i = 0;
+	while (i < CANT_TIPOS_COMPARACION) {
+		if(!compareCaseInsensitive(tipoComparacion,saltos[i].salto)){
+			return saltos[i].saltoNegado;
+		}
+		i++;
+	}
+	return "";
 }
 
 void agregarSaltoFinCondicional() {
