@@ -505,7 +505,7 @@ void agregarSaltoFinCondicional() {
 	char posicionStr[30];
 	
 	// Convierto posición de salto a string para pasarlo a polaca
-	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola-1);
+	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola);
 
 	agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
 	}
@@ -514,7 +514,6 @@ void agregarPosicionAPilaDeSaltos(int adicional) {
 		int posActual = polacaInv.cantidadElementosCola;
 		posActual += adicional;
 		pilaEmpujar(&pilaSaltos, posActual);
-		printf("!!EMPUJANDO: %d\n",posActual);
 	}
 
 int yylex()	{
