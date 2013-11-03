@@ -302,7 +302,7 @@ int main(int argc, char *argv[]) {
 	escribirTSEnArchivo();
 	imprimePolaca(&polacaInv);
 
-	crearFuenteASM();
+	crearFuenteASM(&polacaInv, &tablaSimbolos, cantidadElementosTablaSimbolos);
 }
 
 int yyerror(char *s) {
