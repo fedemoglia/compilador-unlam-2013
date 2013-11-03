@@ -14,7 +14,10 @@
 #include "pila.h"
 	#define PILA_H
 #endif
-
+#ifndef ASM_H
+#include "asm.h"
+	#define ASM_H
+#endif
 
 #define CANTIDAD_ESTADOS 25
 #define CANTIDAD_CARACTERES 20
@@ -298,6 +301,8 @@ int main(int argc, char *argv[]) {
 
 	escribirTSEnArchivo();
 	imprimePolaca(&polacaInv);
+
+	crearFuenteASM();
 }
 
 int yyerror(char *s) {
