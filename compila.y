@@ -105,7 +105,7 @@ grupo_variables:
 	| ID_VAR SEPARADOR_LISTA_VARIABLES grupo_variables;
 	
 asignacion:
-	ID_VAR {  agregarAPolaca($1); } 
+	ID_VAR { validarIdVariableNoFuncion($1);agregarAPolaca($1); } 
 	OP_ASIGNACION  
 	mult_asignacion { agregarOperacionAPolaca("=",-1); };
 	
@@ -242,6 +242,8 @@ void debugMessageString(char * , char *);
 void debugMessage(char *);
 void compilationError(char *);
 char* encontrarSaltoNegado(char*);
+
+void validarIdVariableNoFuncion(int);
 
 void agregarAPolaca(int);
 void escribirTSEnArchivo();
@@ -853,6 +855,13 @@ void escribirTSEnArchivo() {
 void setNombreConstante(char * constante, char * nombreConstante) {
 	strcpy(nombreConstante,"_");
 	strcat(nombreConstante,constante);
+}
+
+void validarIdVariableNoFuncion(int indiceTS) {
+	char tipo = tablaSimbolos[indiceTS].tipo;
+	if(tipo == 'f') {
+		compilationError("No se puede llamar a una función en el lado izquierdo de una asignación.");
+	}
 }
 
 /* Funciones de Polaca */
