@@ -85,13 +85,17 @@ tipo:
 	TIPO_DATO_INT | TIPO_DATO_REAL | TIPO_DATO_STRING;
 	
 funcion:
-	INI_FUNCION declaracion_funcion bloque_declaraciones lista_sentencias retorno_funcion ;
+	INI_FUNCION {agregarOperacionAPolaca("INIFUNCION",-1);}
+	declaracion_funcion 
+	bloque_declaraciones 
+	lista_sentencias 
+	retorno_funcion {agregarOperacionAPolaca("FINFUNCION",-1);};
 
 retorno_funcion: 
 	FIN_FUNCION cadena_caracteres | FIN_FUNCION constante_numerica;
 	
 declaracion_funcion:
-	ID_VAR SEPARADOR_DEC tipo;
+	ID_VAR {agregarAPolaca($1);} SEPARADOR_DEC tipo;
 	
 sentencia:	
 	asignacion
@@ -128,7 +132,7 @@ termino:
 factor:	
 	P_ABRE expresion P_CIERRE 
 	| constante_numerica {agregarAPolaca($1);}
-	| ID_VAR {agregarAPolaca($1);} 
+	| ID_VAR {agregarAPolaca($1); agregarCallAPolacaSiEsFuncion($1);} 
 	| CONST_STRING {agregarAPolaca($1);};
 	
 bucle:
@@ -244,6 +248,7 @@ void compilationError(char *);
 char* encontrarSaltoNegado(char*);
 
 void validarIdVariableNoFuncion(int);
+void agregarCallAPolacaSiEsFuncion(int);
 
 void agregarAPolaca(int);
 void escribirTSEnArchivo();
@@ -860,6 +865,13 @@ void validarIdVariableNoFuncion(int indiceTS) {
 	char tipo = tablaSimbolos[indiceTS].tipo;
 	if(tipo == 'f') {
 		compilationError("No se puede llamar a una función en el lado izquierdo de una asignación.");
+	}
+}
+
+void agregarCallAPolacaSiEsFuncion(int indiceTS) {
+	char tipo = tablaSimbolos[indiceTS].tipo;
+	if(tipo == 'f') {
+		agregarOperacionAPolaca("call",-1);
 	}
 }
 
