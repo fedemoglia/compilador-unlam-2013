@@ -477,7 +477,8 @@ void agregarSaltoFinCondicional() {
 	
 	char posicionStr[30];
 	
-	itoa(polacaInv.cantidadElementosCola-1,posicionStr,10);
+	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola-1);
+//	itoa(polacaInv.cantidadElementosCola-1,posicionStr,10);
 	agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
 	}
 
