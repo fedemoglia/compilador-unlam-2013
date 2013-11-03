@@ -132,7 +132,9 @@ factor:
 	| CONST_STRING {agregarAPolaca($1);};
 	
 bucle:
-	I_BUCLE condicion lista_sentencias I_FINBUCLE ;
+	I_BUCLE  { apilarPosicionCondicionalWhile(); } condicion lista_sentencias I_FINBUCLE { 
+		agregarSaltoFinBucle();
+	};
 	
 condicional:
 	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL { 
@@ -471,14 +473,38 @@ char* encontrarSaltoNegado(char* tipoComparacion){
 	return "";
 }
 
+void apilarPosicionCondicionalWhile() {
+		agregarPosicionAPilaDeSaltos(0);
+	}
+
+void agregarSaltoFinBucle() {
+	int posicionDireccionSalto;
+	pilaExtraer(&pilaSaltos,&posicionDireccionSalto);
+	
+	char posicionStr[30];
+	
+	// -- CONDICIONES DE DECISION --
+	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola-1);
+	agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
+
+	// -- SALTO DE NUEVO A PRIMER COMPARACION (WHILE) --
+	int posicionPrimerComparacion;
+	pilaExtraer(&pilaSaltos,&posicionPrimerComparacion);
+	sprintf(posicionStr,"%d",posicionPrimerComparacion);
+
+	agregarOperacionAPolaca(posicionStr,-1);
+	agregarOperacionAPolaca("JMP",-1);	
+}
+
 void agregarSaltoFinCondicional() {
 	int posicionDireccionSalto;
 	pilaExtraer(&pilaSaltos,&posicionDireccionSalto);
 	
 	char posicionStr[30];
 	
+	// Convierto posición de salto a string para pasarlo a polaca
 	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola-1);
-//	itoa(polacaInv.cantidadElementosCola-1,posicionStr,10);
+
 	agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
 	}
 
