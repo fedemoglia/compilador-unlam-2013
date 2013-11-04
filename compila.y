@@ -257,6 +257,7 @@ void agregarCallAPolacaSiEsFuncion(int);
 void agregarAPolaca(int);
 void escribirTSEnArchivo();
 void setNombreConstante(char *, char *);
+void reemplazarEspacios(char *);
 void limpiarEspacioPalabraLeida();
 void configurarTipoComparacion (char * tipoComp);
 int cantidadElementosTablaSimbolos=0;
@@ -903,6 +904,15 @@ void escribirTSEnArchivo() {
 void setNombreConstante(char * constante, char * nombreConstante) {
 	strcpy(nombreConstante,"_");
 	strcat(nombreConstante,constante);
+	reemplazarEspacios(nombreConstante);
+}
+
+void reemplazarEspacios(char * cadena) {
+	for(int i=0; i < strlen(cadena); i++) {
+		if(cadena[i] == ' ') {
+			cadena[i] = '_';
+		}
+	}
 }
 
 void validarIdVariableNoFuncion(int indiceTS) {
