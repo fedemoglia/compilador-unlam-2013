@@ -144,23 +144,24 @@ bucle:
 	};
 	
 condicional:
-	I_CONDICIONAL condicion lista_sentencias I_FINCONDICIONAL { 
+	I_CONDICIONAL condicion { agregarSaltoIncondicionalOR(); } lista_sentencias I_FINCONDICIONAL { 
 		agregarSaltoFinCondicional();
 		
 	};
 	
+	
 condicion:
 	P_ABRE OP_LOGICO_PRE comparacion P_CIERRE {
-		agregarSaltoFinComparacion("NOT");
+		agregarSaltoFinComparacion("NOT"); agregarCantidadDeSaltos(+1);
 	}
 	| P_ABRE comparacion P_CIERRE {
-		agregarSaltoFinComparacion("");
+		agregarSaltoFinComparacion(""); agregarCantidadDeSaltos(+1);
 	}
-	| P_ABRE comparacion operador comparacion P_CIERRE ;
+	| P_ABRE comparacion {agregarSaltoFinComparacion("");} OP_LOGICO_AND comparacion {agregarSaltoFinComparacion(""); agregarCantidadDeSaltos(+2);} P_CIERRE
+	| P_ABRE comparacion {configurarOR(); agregarSaltoFinComparacion("OR");} 
+	  OP_LOGICO_OR comparacion {agregarSaltoFinComparacion("OR"); agregarCantidadDeSaltos(+2);} 
+	  P_CIERRE ;
 	
-operador:
-	OP_LOGICO_AND 
-	| OP_LOGICO_OR;
 	
 comparacion:
 	expresion OP_COMP_MAYOR expresion { configurarTipoComparacion("JBE"); }
@@ -261,6 +262,8 @@ int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
 colaPolaca polacaInv;
 pilaEnteros pilaSaltos;
+pilaEnteros pilaCantidadSaltos;
+char esOR='n';
 
 int main(int argc, char *argv[]) {
 	char input[20];
@@ -281,6 +284,7 @@ int main(int argc, char *argv[]) {
 	
 	polacaInv.cantidadElementosCola=0;
 	pilaSaltos.cantidadElementosPila=0;
+	pilaCantidadSaltos.cantidadElementosPila=0;
 	
 	printf("Modo Debug? (y/n)");
 	modoDebug = getchar();
@@ -467,7 +471,7 @@ void agregarSaltoFinComparacion(char * operador) {
 	agregarPosicionAPilaDeSaltos(+1);
 	agregarOperacionAPolaca("CMP",-1);
 	agregarOperacionAPolaca("_",-1); // Dejo una celda en blanco para llenar con la posicion a la que voy a saltar
-	if(compareCaseInsensitive(operador,"NOT")){
+	if(compareCaseInsensitive(operador,"NOT") && compareCaseInsensitive(operador,"OR")){
 		agregarOperacionAPolaca(tipoComparacion,-1);
 	} else {
 		agregarOperacionAPolaca(encontrarSaltoNegado(tipoComparacion),-1);
@@ -508,17 +512,51 @@ void agregarSaltoFinBucle() {
 	agregarOperacionAPolaca("JMP",-1);	
 }
 
+void agregarCantidadDeSaltos(int adicional){
+	pilaEmpujar(&pilaCantidadSaltos, adicional);
+}
+
+void configurarOR() {
+	esOR='s';
+}
+
+void agregarSaltoIncondicionalOR() {
+	if(esOR=='s') {
+		agregarSaltoFinCondicional();
+		
+		agregarPosicionAPilaDeSaltos(-2);
+	
+		agregarCantidadDeSaltos(1);
+		
+
+		
+		esOR='n';
+	}
+
+}
+
 void agregarSaltoFinCondicional() {
 	int posicionDireccionSalto;
-	pilaExtraer(&pilaSaltos,&posicionDireccionSalto);
-	
-	char posicionStr[30];
-	
-	// Convierto posición de salto a string para pasarlo a polaca
-	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola);
+	int cantidadSaltos;
+	pilaExtraer(&pilaCantidadSaltos,&cantidadSaltos);
+	debugMessageInt("--- FLUJO --- Cantidad de saltos",cantidadSaltos);
 
-	agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
+	if(esOR=='s') {
+		agregarOperacionAPolaca("_",-1);
+		agregarOperacionAPolaca("JMP",-1);
 	}
+
+	
+	while(cantidadSaltos>0){
+			pilaExtraer(&pilaSaltos,&posicionDireccionSalto);
+			char posicionStr[30];
+			sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola);
+			agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
+			cantidadSaltos--;
+			debugMessageString("--- POLACA --- Agregando", posicionStr);
+		}
+		
+}
 
 void agregarPosicionAPilaDeSaltos(int adicional) {
 		int posActual = polacaInv.cantidadElementosCola;
@@ -908,7 +946,7 @@ void agregarOperacionAPolaca(char * operacion, int posicion) {
 
 int compareCaseInsensitive(char* cad1, char* cad2) {
 /* WINDOWS */
-//	return strcmpi(cad1,cad2);
+	return strcmpi(cad1,cad2);
 /* LINUX */ 
-	return strcasecmp(cad1,cad2);	
+//	return strcasecmp(cad1,cad2);	
 }
