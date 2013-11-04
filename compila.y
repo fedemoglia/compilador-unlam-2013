@@ -178,7 +178,7 @@ comparacion:
 ;
 	
 output:
-	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {printf("Output: %d\n",$3);agregarOperacionAPolaca("PRINT",-1);};
+	INST_IMPRIMIR P_ABRE cadena_caracteres P_CIERRE {agregarOperacionAPolaca("PRINT",-1);};
 	
 porcentaje: 
 	PORCENTAJE P_ABRE expresion SEPARADOR_LISTA_VARIABLES expresion P_CIERRE {agregarOperacionAPolaca("PERCENT",-1);};
@@ -257,7 +257,8 @@ void agregarCallAPolacaSiEsFuncion(int);
 void agregarAPolaca(int);
 void escribirTSEnArchivo();
 void setNombreConstante(char *, char *);
-
+void limpiarEspacioPalabraLeida();
+void configurarTipoComparacion (char * tipoComp);
 int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
 colaPolaca polacaInv;
@@ -305,7 +306,7 @@ int main(int argc, char *argv[]) {
 
 	escribirTSEnArchivo();
 	imprimePolaca(&polacaInv);
-
+	generarArchivoIntermedia(&polacaInv);
 	crearFuenteASM(&polacaInv, &tablaSimbolos, cantidadElementosTablaSimbolos);
 }
 
