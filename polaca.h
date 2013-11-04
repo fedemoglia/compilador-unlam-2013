@@ -53,6 +53,25 @@ void imprimirCola(colaPolaca * stack) {
 	} 
 }
 
+void generarArchivoIntermedia (colaPolaca * stack) {
+	FILE * intermedia;
+	if( !(intermedia = fopen("intermedia.txt","w") ) ) {
+		printf("Error de apertura del archivo de notacion intermedia...");
+		getchar();
+		exit(0);
+    }
+	int i=0;
+	struct elementoPolaca elem;
+	while(i<stack->cantidadElementosCola-1) {
+		elem = stack->elementos[i];
+		fprintf(intermedia, "%s,",elem.elemento);	
+		i++;
+	}
+	elem = stack->elementos[i];
+	fprintf(intermedia, "%s",elem.elemento);
+	fclose(intermedia);
+}
+
 void imprimePolaca(colaPolaca * pol)
 {
 	imprimirCola(pol);
