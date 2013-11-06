@@ -23,7 +23,7 @@
 #define CANTIDAD_CARACTERES 20
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
 #define LARGO_MAXIMO_CTE_STRING 30
-#define CANT_PALABRAS_RESERVADAS 20
+#define CANT_PALABRAS_RESERVADAS 21
 #define TAM_MAX_CTE_REAL 9999 // TODO Definir número real.
 #define TAM_MAX_CTE_ENTERA 65535
 #define CANT_TIPOS_COMPARACION 6
@@ -38,7 +38,7 @@
 %token OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR
 %right OP_ASIGNACION I_PROG
 %left OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
-%token P_ABRE P_CIERRE I_CONDICIONAL I_FINCONDICIONAL I_BUCLE I_FINBUCLE
+%token P_ABRE P_CIERRE I_CONDICIONAL I_ELSE I_FINCONDICIONAL I_BUCLE I_FINBUCLE
 %left I_FINPROG
 %token INI_FUNCION FIN_FUNCION
 %token TIPO_DATO_INT TIPO_DATO_REAL TIPO_DATO_STRING
@@ -144,10 +144,13 @@ bucle:
 	};
 	
 condicional:
-	I_CONDICIONAL condicion { agregarSaltoIncondicionalOR(); } lista_sentencias I_FINCONDICIONAL { 
+	I_CONDICIONAL condicion { agregarSaltoIncondicionalOR(); } lista_sentencias negacion_condicion I_FINCONDICIONAL { 
 		agregarSaltoFinCondicional();
 		
 	};
+	
+negacion_condicion: 
+	I_ELSE lista_sentencias | ;
 	
 	
 condicion:
@@ -388,6 +391,7 @@ struct {
 	"real", TIPO_DATO_REAL,
 	"string", TIPO_DATO_STRING,
 	"if", I_CONDICIONAL,
+	"else", I_ELSE,
 	"endif", I_FINCONDICIONAL,
 	"while", I_BUCLE,
 	"endwhile", I_FINBUCLE,
