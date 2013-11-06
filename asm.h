@@ -16,6 +16,8 @@ struct colaPolaca * polaca;
 struct elementoTablaSimbolos * elementosTS;
 int cantidadElementosTS;
 
+int indiceInicioMain = 0;
+
 void setNombreVariableASM(char *, char *, char *);
 
 void crearFuenteASM(struct colaPolaca * colaPolaca, struct elementoTablaSimbolos * tablaSimbolos, int cantidadElementosTablaSimbolos) {
@@ -53,7 +55,9 @@ void generarCodigoCabeceraASM() {
 
 void generarCodigoVariablesASM() {
 	fprintf(fuenteASM,".DATA ; Comienzo de la zona de datos\n\n");
+	
 	fprintf(fuenteASM,"MAXTEXTSIZE equ %d\n\n", LARGO_MAXIMO_CTE_STRING);
+	fprintf(fuenteASM,"_newline db 0Dh,0Ah,'$'\n");
 
 	for(int i = 0; i < cantidadElementosTS; i++) {
 		struct elementoTablaSimbolos elementoTS = elementosTS[i];
@@ -128,6 +132,7 @@ void generarCodigoRutinasUsuario() {
 		}
 		fprintf(fuenteASM, "%s ENDP\n\n", nombreFuncion);
 		indiceInicioFuncion = buscarInicioFuncion(indiceFinFuncion); // Busco en la polaca el inicio de la siguiente función.
+		indiceInicioMain = indiceFinFuncion + 1; // Se setea en una variable global el inicio del main para evitar la declaración de funciones.
 	} 
 }
 
@@ -151,11 +156,15 @@ int buscarFinFuncion(int inicioBusqueda) {
 
 void generarCodigoMainASM() {
 	fprintf(fuenteASM,"; --- Comienzo de programa principal ---\n\n");
-
 	fprintf(fuenteASM, "mov AX,@DATA ; Inicializa el segmento de datos\n");
-	fprintf(fuenteASM, "mov DS,AX ;\n");
+	fprintf(fuenteASM, "mov DS,AX ;\n\n");
+	
+	for(int i = indiceInicioMain; i < polaca->cantidadElementosCola; i++) {
+		struct elementoPolaca elem = polaca->elementos[i];
+		fprintf(fuenteASM, "- POS: %d - %s (%c)\n", i, elem.elemento, elem.tipo);
+	}
 
-	fprintf(fuenteASM,"; --- Fin de programa principal ---\n\n");
+	fprintf(fuenteASM,"\n; --- Fin de programa principal ---\n\n");
 }
 
 void ensamblarArchivosFuenteASM() {
@@ -259,5 +268,20 @@ void agregarRutinaConcat() {
 	"	mov BYTE PTR [DI],al ; el registro DI quedo apuntando al final\n"
 	"	ret\n"
 	"CONCAT ENDP\n\n"
+	);
+}
+
+void agregarRutinaNuevaLinea() {
+	fprintf(fuenteASM,
+	"NEWLINE PROC\n"
+	"	push dx\n"
+	"	push eax\n"
+	"	mov DX, OFFSET _newline\n"
+	"	mov ah,09\n"
+	"	int 21h\n"
+	"	pop eax\n"
+	"	pop dx\n"
+	"	ret\n"
+	"NEWLINE ENDP\n\n"
 	);
 }
