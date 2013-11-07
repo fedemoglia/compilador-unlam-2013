@@ -38,6 +38,27 @@ void pilaExtraer(struct pilaEnteros * stack, int * elemento) {
 	stack->cantidadElementosPila--;
 }
 
+void colaExtraer(struct pilaEnteros * stack, int * elemento) {
+	if(pilaVacia(stack)) {
+		printf("Error! Se quiso extraer de una pila vacía\n");
+		exit(1);
+	}
+	
+	*elemento=stack->elementos[0];
+	
+	int i=0;
+	while(i<stack->cantidadElementosPila-1) {
+		stack->elementos[i] = stack->elementos[i+1];	
+		i++;
+	}
+	
+	stack->cantidadElementosPila--;
+
+
+
+
+}
+
 void imprimirPila(struct pilaEnteros  * stack) {
 	printf("\n===VOLCADO DE PILA DE SALTOS=== \n");
 	int i=stack->cantidadElementosPila;
