@@ -1,0 +1,20 @@
+begin
+	dec
+		real real1,real2
+		int int1,int2
+		string string1,string2
+	endec
+	
+	main
+		if(int1<5 or int2<4)
+			print("Menor a 5")
+		else
+			if(real1<real2 or real2>9)
+				print("Real1 Es Menor")
+			else
+				print("Real1 es menor o igual")
+			endif
+		endif
+	endmain
+
+end
