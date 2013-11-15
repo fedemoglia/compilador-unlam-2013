@@ -148,12 +148,12 @@ condicional:
 	
 resto_condicion: 
 	I_FINCONDICIONAL { 
-		agregarSaltoFinCondicional();
+		finThen();
 		}
 	| 
 	I_ELSE { 
-		agregarSaltoElse();  agregarSaltoFinCondicional();
-	} lista_sentencias I_FINCONDICIONAL { agregarSaltoFinCondicional(); };
+		   comienzoElse();
+	} lista_sentencias I_FINCONDICIONAL { finElse(); };
 	
 condicion:
 	P_ABRE OP_LOGICO_PRE comparacion P_CIERRE { 
@@ -271,7 +271,6 @@ colaPolaca polacaInv;
 pilaEnteros pilaSaltos;
 pilaEnteros pilaCantidadSaltos;
 char esOR='n';
-char esElse='n';
 
 int main(int argc, char *argv[]) {
 	char input[20];
@@ -532,49 +531,67 @@ void configurarOR() {
 
 void agregarSaltoIncondicionalOR() {
 	if(esOR=='s') {
-		agregarSaltoFinCondicional();
+		finThen();
 		agregarPosicionAPilaDeSaltos(-2);
 		agregarCantidadDeSaltos(1);
 		esOR='n';
 	}
 }
 
-void agregarSaltoElse() {
+void comienzoElse() {
+	llenarCeldasDeSalto(2);
+
+
 	debugMessageInt("---POLACA-ELSE--- Agregando salto en",polacaInv.cantidadElementosCola);
 	agregarPosicionAPilaDeSaltos(+0);
 	agregarCantidadDeSaltos(1);
 	agregarOperacionAPolaca("_",-1);
 	agregarOperacionAPolaca("JMP",-1);
-	esElse='s';
 }
 
-void agregarSaltoFinCondicional() {
-	int posicionDireccionSalto;
-	int cantidadSaltos;
-	colaExtraer(&pilaCantidadSaltos,&cantidadSaltos);
-	debugMessageInt("--- FLUJO --- Cantidad de saltos",cantidadSaltos);
-
+void finThen() {
 	if(esOR=='s') {
 		agregarOperacionAPolaca("_",-1);
 		agregarOperacionAPolaca("JMP",-1);
 	}
+
+	llenarCeldasDeSalto(+0);
+}
+
+void finElse() {
 	
-	if(esElse=='s') {
-		esElse='n';
+	if(esOR=='s') {
+		agregarOperacionAPolaca("_",-1);
+		agregarOperacionAPolaca("JMP",-1);
 	}
-	
-	while(cantidadSaltos>0){
-			colaExtraer(&pilaSaltos,&posicionDireccionSalto);
-			int posicionSalto = polacaInv.cantidadElementosCola;
-			
-			char posicionStr[30];
-			sprintf(posicionStr,"%d",posicionSalto);
-			agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
-			cantidadSaltos--;
-			debugMessageString("--- POLACA --- Agregando", posicionStr);
-		}
+
+	llenarCeldasDeSalto(0);
 		
 }
+
+
+void llenarCeldasDeSalto(int adicionalACeldaActual) {
+
+	int posicionDireccionSalto;
+	int cantidadSaltos;
+	pilaExtraer(&pilaCantidadSaltos,&cantidadSaltos);
+	debugMessageInt("--- FLUJO --- Cantidad de saltos",cantidadSaltos);
+
+	while(cantidadSaltos>0){
+		pilaExtraer(&pilaSaltos,&posicionDireccionSalto);
+		int posicionSalto = polacaInv.cantidadElementosCola+adicionalACeldaActual;
+		
+		char posicionStr[30];
+		sprintf(posicionStr,"%d",posicionSalto);
+		agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
+		cantidadSaltos--;
+		debugMessageString("--- POLACA --- Agregando", posicionStr);
+	}
+
+}
+
+
+
 
 void agregarPosicionAPilaDeSaltos(int adicional) {
 		int posActual = polacaInv.cantidadElementosCola;
@@ -973,7 +990,7 @@ void agregarOperacionAPolaca(char * operacion, int posicion) {
 
 int compareCaseInsensitive(char* cad1, char* cad2) {
 /* WINDOWS */
-	return strcmpi(cad1,cad2);
+//	return strcmpi(cad1,cad2);
 /* LINUX */ 
-//	return strcasecmp(cad1,cad2);	
+	return strcasecmp(cad1,cad2);	
 }
