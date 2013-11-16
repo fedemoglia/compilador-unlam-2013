@@ -6,7 +6,6 @@
 	int cantidadElementosPila;
 } pilaEnteros;
 
-
 void pilaEmpujar(struct pilaEnteros * stack, int elemento) {
 
 	if(stack->cantidadElementosPila==TAMANIO_PILA) {

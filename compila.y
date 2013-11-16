@@ -995,7 +995,7 @@ void agregarAPolaca(int indiceTS) {
 
 void agregarOperacionAPolaca(char * operacion, int posicion) {
 
-	polacaAgregar(&polacaInv,operacion,'?',posicion);
+	polacaAgregar(&polacaInv,operacion,'o',posicion);
 
 	debugMessageString("--- POLACA --- Agregando",operacion);
 	
