@@ -45,7 +45,11 @@ void colaExtraer(struct pilaEnteros * stack, int * elemento) {
 	}
 	
 	*elemento=stack->elementos[0];
-	
+	int j=0;
+	while(j<stack->cantidadElementosPila) {
+		printf("--- Elemento %d: %d\n",j,stack->elementos[j]);	
+		j++;
+	}
 	int i=0;
 	while(i<stack->cantidadElementosPila-1) {
 		stack->elementos[i] = stack->elementos[i+1];	
