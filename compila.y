@@ -716,6 +716,7 @@ void finId() {
 }
 
 void initCte() {
+	yylval=NULL;
 	limpiarEspacioPalabraLeida();
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 }
@@ -742,7 +743,6 @@ void finCteEntera() {
 			debugMessageString("--- DEBUG --- Agregando constante entera a tabla de símbolos",nombreConstante);
 		}
 		else {
-			cantidadElementosTablaSimbolos = agregarEnTS(ambitoActual, 'i', nombreConstante, &valorConstante, tablaSimbolos, cantidadElementosTablaSimbolos);
 			yylval = cantidadElementosTablaSimbolos;
 		}	
 		tokenIdentificado = CONST_ENTERA;
@@ -769,6 +769,9 @@ void finCteReal() {
 			yylval = cantidadElementosTablaSimbolos - 1;
 			debugMessageString("Agregando constante real a tabla de símbolos",nombreConstante);
 		}
+		else {
+			yylval=indicePalabraEnTablaDeSimbolos;
+		}	
 		
 		tokenIdentificado = CONST_REAL;
 	} else {
@@ -796,12 +799,16 @@ void finCadena() {
 		char nombreConstante[tamPalabraLeida+1] ;
 		setNombreConstante(palabraLeida, nombreConstante);	
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
+		debugMessageInt("--- TS --- Indice en Tabla de Símbolos",indicePalabraEnTablaDeSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
 			debugMessageString("Constante no encontrada en tabla de símbolos",palabraLeida);
 			cantidadElementosTablaSimbolos= agregarEnTS(ambitoActual, 's', nombreConstante, palabraLeida, tablaSimbolos, cantidadElementosTablaSimbolos);
 			yylval = cantidadElementosTablaSimbolos - 1;
 			debugMessageString("Agregando constante a tabla de símbolos",nombreConstante);
+		}
+		else {
+			yylval = indicePalabraEnTablaDeSimbolos;
 		}
 		tokenIdentificado = CONST_STRING;
 	} else {
