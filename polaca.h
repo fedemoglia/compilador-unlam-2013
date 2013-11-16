@@ -34,6 +34,16 @@ void colaEmpujar(colaPolaca * stack, struct elementoPolaca elemento, int posicio
 	}
 }
 
+void colaSacar(colaPolaca * stack,  struct elementoPolaca * elemento) {
+	if(colaVacia(stack)) {
+		printf("Error! Se quiso extraer de una pila vacía\n");
+		exit(1);
+	}
+	
+	*elemento=stack->elementos[stack->cantidadElementosCola-1];
+	stack->cantidadElementosCola--;
+}
+
 int colaVacia (colaPolaca * stack) {
 	if(stack->cantidadElementosCola==0) {
 		return 1;

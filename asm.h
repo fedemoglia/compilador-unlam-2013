@@ -12,6 +12,7 @@
 //FILE * fuenteASM;
 FILE * fuenteASM;
 
+colaPolaca pilaOperandos;
 struct colaPolaca * polaca;
 struct elementoTablaSimbolos * elementosTS;
 int cantidadElementosTS;
@@ -112,6 +113,8 @@ void generarCodigoRutinasEstandar() {
 	agregarRutinaStrlen();
 	agregarRutinaCopiar();
 	agregarRutinaConcat();
+	agregarRutinaEsperarTecla();
+	agregarRutinaNuevaLinea();
 }
 
 void generarCodigoRutinasUsuario() {
@@ -126,10 +129,9 @@ void generarCodigoRutinasUsuario() {
 		strcpy(nombreFuncion, polaca->elementos[indiceInicioFuncion + 1].elemento);
 		
 		fprintf(fuenteASM, "%s PROC\n", nombreFuncion); // Nombre Función				
-		for(int i = indiceInicioFuncion + 2; i < indiceFinFuncion; i++) {  // Las instrucciones de la función empiezan en inicio + 2.
-			struct elementoPolaca elem = polaca->elementos[i];
-			fprintf(fuenteASM, "	%d - %s\n", i, elem.elemento, elem.tipo);
-		}
+
+		generarCodigoRutina(indiceInicioFuncion + 2, indiceFinFuncion);
+
 		fprintf(fuenteASM, "%s ENDP\n\n", nombreFuncion);
 		indiceInicioFuncion = buscarInicioFuncion(indiceFinFuncion); // Busco en la polaca el inicio de la siguiente función.
 		indiceInicioMain = indiceFinFuncion + 1; // Se setea en una variable global el inicio del main para evitar la declaración de funciones.
@@ -152,6 +154,61 @@ int buscarFinFuncion(int inicioBusqueda) {
 		}
 	}
 	return -1;
+}
+
+void generarCodigoRutina(int inicioFuncion, int finFuncion) {
+	for(int i = inicioFuncion; i < finFuncion; i++) {
+		struct elementoPolaca elem = polaca->elementos[i];
+		if(elem.tipo == 'o') { // Es Operando
+			agregarOperacion(elem);			
+		} else { // Es operador
+			agregarOperandoCola(elem);
+		}
+	}
+}
+
+void agregarOperacion(struct elementoPolaca operador) {
+	if(!compareCaseInsensitive(operador.elemento, "=")) {
+		asignacionASM();
+	} else if(!compareCaseInsensitive(operador.elemento, "+")) {
+		sumaASM();
+	} else if(!compareCaseInsensitive(operador.elemento, "-")) {
+		restaASM();
+	} else if(!compareCaseInsensitive(operador.elemento, "*")) {
+		multiplicacionASM();
+	} else if(!compareCaseInsensitive(operador.elemento, "/")) {
+		divisionASM();
+	}
+}
+
+void agregarOperandoCola(struct elementoPolaca operando) {
+	colaEmpujar(&pilaOperandos, operando, -1);
+}
+
+void asignacionASM() {
+	struct elementoPolaca operando1;
+	struct elementoPolaca operando2;
+
+	colaSacar(&pilaOperandos, &operando1);
+	colaSacar(&pilaOperandos, &operando2);
+
+	//fprintf(fuenteASM, "	%s = %s\n", operando2.elemento, operando1.elemento);
+}
+
+void sumaASM() {
+
+}
+
+void restaASM() {
+
+}
+
+void multiplicacionASM() {
+
+}
+
+void divisionASM() {
+
 }
 
 void generarCodigoMainASM() {
@@ -268,6 +325,24 @@ void agregarRutinaConcat() {
 	"	mov BYTE PTR [DI],al ; el registro DI quedo apuntando al final\n"
 	"	ret\n"
 	"CONCAT ENDP\n\n"
+	);
+}
+
+void agregarRutinaEsperarTecla() {
+	fprintf(fuenteASM,
+	"; Rutina ESPERA_TECLA\n"
+	"; A la espera de una tecla\n"
+	"ESPERA_TECLA PROC\n"
+	"	mov dx,OFFSET msgPresione\n"
+	"	mov ah,09\n"
+	"	int 21h\n"
+	"	mov DX, OFFSET _newline\n"
+	"	mov ah,09\n"
+	"	int 21h\n"
+	"	mov ah,1\n"
+	"	int 21h\n"
+	"	ret\n"
+	"ESPERA_TECLA ENDP\n\n"
 	);
 }
 
