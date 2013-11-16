@@ -139,7 +139,7 @@ factor:
 	| CONST_STRING {agregarAPolaca($1);};
 	
 bucle:
-	I_BUCLE  { apilarPosicionCondicionalWhile(); } condicion lista_sentencias I_FINBUCLE { 
+	I_BUCLE  { apilarPosicionCondicionalWhile();} condicion {agregarSaltoIncondicionalOR();} lista_sentencias I_FINBUCLE {  
 		agregarSaltoFinBucle();
 	};
 	
@@ -504,14 +504,20 @@ void apilarPosicionCondicionalWhile() {
 
 void agregarSaltoFinBucle() {
 	int posicionDireccionSalto;
-	pilaExtraer(&pilaSaltos,&posicionDireccionSalto);
-	
 	char posicionStr[30];
-	
+	int cantidadSaltos;
+	pilaExtraer(&pilaCantidadSaltos,&cantidadSaltos);
+	printf("CANTIDAD DE SALTOS: %d\n\n",cantidadSaltos);
 	// -- CONDICIONES DE DECISION --
-	sprintf(posicionStr,"%d",polacaInv.cantidadElementosCola+2);
-	agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
-
+	while(cantidadSaltos>0){
+		pilaExtraer(&pilaSaltos,&posicionDireccionSalto);
+		int posicionSalto = polacaInv.cantidadElementosCola + 2;
+		char posicionStr[30];
+		sprintf(posicionStr,"%d",posicionSalto);
+		agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
+		cantidadSaltos--;
+		debugMessageString("--- POLACA --- Agregando", posicionStr);
+	}
 	// -- SALTO DE NUEVO A PRIMER COMPARACION (WHILE) --
 	int posicionPrimerComparacion;
 	pilaExtraer(&pilaSaltos,&posicionPrimerComparacion);
