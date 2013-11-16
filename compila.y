@@ -743,7 +743,7 @@ void finCteEntera() {
 			debugMessageString("--- DEBUG --- Agregando constante entera a tabla de símbolos",nombreConstante);
 		}
 		else {
-			yylval = cantidadElementosTablaSimbolos;
+			yylval = indicePalabraEnTablaDeSimbolos;
 		}	
 		tokenIdentificado = CONST_ENTERA;
 	} else {
