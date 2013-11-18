@@ -1,25 +1,24 @@
-#define FILE_DATOS "datos.asm"
-#define FILE_PROCEDIMIENTOS "procedimientos.asm"
-#define FILE_MAIN "main.asm"
 #define FILE_FUENTE "fuente.asm"
 
 // FIXME Estamos definiendo dos veces las constantes!
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
 #define LARGO_MAXIMO_CTE_STRING 30
 
-//FILE * fuenteASM;
-//FILE * fuenteASM;
-//FILE * fuenteASM;
+#define LIBERAR_COPRO "FFREE"
+
 FILE * fuenteASM;
 
 colaPolaca pilaOperandos;
 struct colaPolaca * polaca;
 struct elementoTablaSimbolos * elementosTS;
 int cantidadElementosTS;
+char ambito[30] = "main";
 
 int indiceInicioMain = 0;
 
 void setNombreVariableASM(char *, char *, char *);
+void agregarOperandoColaDesdePolaca(struct elementoPolaca);
+void agregarOperandoCola(char *, char);
 
 void crearFuenteASM(struct colaPolaca * colaPolaca, struct elementoTablaSimbolos * tablaSimbolos, int cantidadElementosTablaSimbolos) {
 	// FIXME No me gusta la forma en que se están declarando estas varibles globales, pero se complicaba pasar todos los parámetros siempre.
@@ -27,7 +26,7 @@ void crearFuenteASM(struct colaPolaca * colaPolaca, struct elementoTablaSimbolos
 	elementosTS = tablaSimbolos;
 	cantidadElementosTS = cantidadElementosTablaSimbolos;
 
-	crearArchivosASM();
+	crearArchivoASM();
 
 	generarCodigoCabeceraASM();
 	generarCodigoVariablesASM();
@@ -36,16 +35,10 @@ void crearFuenteASM(struct colaPolaca * colaPolaca, struct elementoTablaSimbolos
 	generarCodigoRutinasASM();
 	generarCodigoMainASM();
 	generarCodigoFinCodigoASM();
-	
-	//ensamblarArchivosFuenteASM();
-	//eliminarArchivosASMTemporales();
 }
 
-void crearArchivosASM() {
+void crearArchivoASM() {
 	fuenteASM = fopen(FILE_FUENTE, "wt");
-	//fuenteASM = fopen(FILE_DATOS, "wt");
-	//fuenteASM = fopen(FILE_PROCEDIMIENTOS, "wt");
-	//fuenteASM = fopen(FILE_MAIN, "wt");
 }
 
 void generarCodigoCabeceraASM() {
@@ -59,6 +52,7 @@ void generarCodigoVariablesASM() {
 	
 	fprintf(fuenteASM,"MAXTEXTSIZE equ %d\n\n", LARGO_MAXIMO_CTE_STRING);
 	fprintf(fuenteASM,"_newline db 0Dh,0Ah,'$'\n");
+	fprintf(fuenteASM,"AUX db MAXTEXTSIZE dup(?),'$'\n");	
 
 	for(int i = 0; i < cantidadElementosTS; i++) {
 		struct elementoTablaSimbolos elementoTS = elementosTS[i];
@@ -130,6 +124,7 @@ void generarCodigoRutinasUsuario() {
 		
 		fprintf(fuenteASM, "%s PROC\n", nombreFuncion); // Nombre Función				
 
+		strcpy(ambito, nombreFuncion);
 		generarCodigoRutina(indiceInicioFuncion + 2, indiceFinFuncion);
 
 		fprintf(fuenteASM, "%s ENDP\n\n", nombreFuncion);
@@ -162,7 +157,7 @@ void generarCodigoRutina(int inicioFuncion, int finFuncion) {
 		if(elem.tipo == 'o') { // Es Operando
 			agregarOperacion(elem);			
 		} else { // Es operador
-			agregarOperandoCola(elem);
+			agregarOperandoColaDesdePolaca(elem);
 		}
 	}
 }
@@ -171,7 +166,11 @@ void agregarOperacion(struct elementoPolaca operador) {
 	if(!compareCaseInsensitive(operador.elemento, "=")) {
 		asignacionASM();
 	} else if(!compareCaseInsensitive(operador.elemento, "+")) {
-		sumaASM();
+		if(esOperacionEntreStrings()) {
+			concatenacionStringsASM();
+		} else {
+			sumaASM();
+		}	
 	} else if(!compareCaseInsensitive(operador.elemento, "-")) {
 		restaASM();
 	} else if(!compareCaseInsensitive(operador.elemento, "*")) {
@@ -181,22 +180,117 @@ void agregarOperacion(struct elementoPolaca operador) {
 	}
 }
 
-void agregarOperandoCola(struct elementoPolaca operando) {
+void agregarOperandoColaDesdePolaca(struct elementoPolaca operando) {
+	// A la pila se agrega el operando con el nombre que tiene la variable en ASM.
+	strcat(operando.elemento, "_");
+	strcat(operando.elemento, ambito);
+	
 	colaEmpujar(&pilaOperandos, operando, -1);
 }
 
+void agregarOperandoCola(char * operando, char tipo) {
+	polacaAgregar(&pilaOperandos, operando, tipo, -1);
+}
+
+int esOperacionEntreStrings() {
+	// FIXME Esto me parece horrible como se hace, pero sino tenía que cambiar varias cosas.
+	int indiceUltimoElemento = pilaOperandos.cantidadElementosCola - 1;
+	if(pilaOperandos.elementos[indiceUltimoElemento].tipo == 's') {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 void asignacionASM() {
-	struct elementoPolaca operando1;
-	struct elementoPolaca operando2;
+	if(esOperacionEntreStrings()) {
+		asignacionStringsASM();
+	} else {
+		asignacionNumericaASM();
+	}	
+}
 
-	colaSacar(&pilaOperandos, &operando1);
-	colaSacar(&pilaOperandos, &operando2);
+void asignacionNumericaASM() {
+	struct elementoPolaca operando;
+	char aux[60];
 
-	//fprintf(fuenteASM, "	%s = %s\n", operando2.elemento, operando1.elemento);
+	agregarAFuenteASM("; Asignacion");
+	agregarAFuenteASM(LIBERAR_COPRO);
+	
+	colaSacar(&pilaOperandos, &operando);  // Saco 1er operando.
+	if(operando.tipo == 'i') {
+		strcpy(aux,"FILD ");
+	} else {
+		strcpy(aux,"FLD ");
+	}
+	
+	strcat(aux, operando.elemento);		
+	agregarAFuenteASM(aux);
+	
+	colaSacar(&pilaOperandos, &operando); // Saco 2do operando.
+	if(operando.tipo == 'i') {
+		strcpy(aux,"FISTP ");
+	} else {
+		strcpy(aux,"FSTP ");
+	}	
+	
+	strcat(aux, operando.elemento);
+	agregarAFuenteASM(aux);	
+}
+
+void asignacionStringsASM() {
+	struct elementoPolaca operando1, operando2;
+	char aux[60];
+	
+	agregarAFuenteASM("; Asignacion strings");
+	
+	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.	
+	colaSacar(&pilaOperandos, &operando2); // Saco 2do operando.
+	
+	strcpy(aux, "MOV SI,OFFSET ");
+	strcat(aux, operando1.elemento);
+	agregarAFuenteASM(aux);
+	
+	strcpy(aux, "MOV DI,OFFSET ");
+	strcat(aux, operando2.elemento);
+	agregarAFuenteASM(aux);
+	
+	strcpy(aux,"CALL copiar");
+	agregarAFuenteASM(aux);
 }
 
 void sumaASM() {
 
+}
+
+void concatenacionStringsASM() {
+	struct elementoPolaca operando1, operando2;
+	char operador[100], aux[100];
+
+	strcpy(aux,"; Concatenacion strings");
+	agregarAFuenteASM(aux);
+	
+	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.
+	colaSacar(&pilaOperandos, &operando2); // Saco 2do operando.
+
+	agregarAFuenteASM("MOV AX, @DATA");
+	agregarAFuenteASM("MOV ES,AX");
+	
+	strcpy(aux, "MOV SI,OFFSET ");
+	strcat(aux, operando2.elemento);
+	agregarAFuenteASM(aux);
+	
+	agregarAFuenteASM("MOV DI,OFFSET AUX");
+	agregarAFuenteASM("CALL COPIAR");
+	
+	strcpy(aux, "MOV SI,OFFSET ");
+	strcat(aux, operando1.elemento);
+	agregarAFuenteASM(aux);
+	
+	agregarAFuenteASM("MOV DI,OFFSET AUX");
+	agregarAFuenteASM("call CONCAT");
+	
+	agregarOperandoCola("AUX", 's');
 }
 
 void restaASM() {
@@ -223,32 +317,6 @@ void generarCodigoMainASM() {
 
 	fprintf(fuenteASM,"\n; --- Fin de programa principal ---\n\n");
 }
-
-void ensamblarArchivosFuenteASM() {
-	FILE * fuenteASM = fopen("fuente.asm", "wt");
-	FILE * fileDatosTemp = fopen(FILE_DATOS, "rt");
-	char buffer[200];
-	
-	fgets(buffer, sizeof(buffer), fileDatosTemp);
-	while(!feof(fileDatosTemp)) {
-		fprintf("%s", buffer);
-		fprintf(fuenteASM, "%s", buffer);
-		fgets(buffer, sizeof(buffer), fileDatosTemp);
-	}
-
-	fclose(fuenteASM);
-}
-
-void eliminarArchivosASMTemporales() {
-	fclose(fuenteASM);
-	fclose(fuenteASM);
-	fclose(fuenteASM);
-
-	remove(FILE_DATOS);
-	remove(FILE_PROCEDIMIENTOS);
-	remove(FILE_MAIN);
-}
-
 
 /* Rutinas estándar */
 void agregarRutinaStrlen() {
@@ -359,4 +427,8 @@ void agregarRutinaNuevaLinea() {
 	"	ret\n"
 	"NEWLINE ENDP\n\n"
 	);
+}
+
+void agregarAFuenteASM(char * cadena) {
+	fprintf(fuenteASM, "	%s\n", cadena);
 }
