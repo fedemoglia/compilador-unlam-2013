@@ -53,7 +53,8 @@ void generarCodigoVariablesASM() {
 	fprintf(fuenteASM,"MAXTEXTSIZE equ %d\n\n", LARGO_MAXIMO_CTE_STRING);
 	fprintf(fuenteASM,"_newline db 0Dh,0Ah,'$'\n");
 	fprintf(fuenteASM,"MSG_PRESIONE_TECLA db 0DH,0AH, \"Presione una tecla para continuar...\",'$'\n");
-	fprintf(fuenteASM,"AUX db MAXTEXTSIZE dup(?),'$'\n");	
+	fprintf(fuenteASM,"AUX_STRING db MAXTEXTSIZE dup(?),'$'\n");	
+	fprintf(fuenteASM, "AUX_NUMERO dd ?\n");
 
 	for(int i = 0; i < cantidadElementosTS; i++) {
 		struct elementoTablaSimbolos elementoTS = elementosTS[i];
@@ -164,6 +165,28 @@ void generarCodigoRutina(int inicioFuncion, int finFuncion) {
 	}
 }
 
+void generarCodigoMainASM() {
+	fprintf(fuenteASM, "; --- Comienzo de programa principal ---\n\n");
+	fprintf(fuenteASM, "MAIN:\n");
+	fprintf(fuenteASM, "mov AX,@DATA ; Inicializa el segmento de datos\n");
+	fprintf(fuenteASM, "mov DS,AX ;\n\n");
+	strcpy(ambito, "main"); // Seteo ambito en "main".
+	
+	for(int i = indiceInicioMain; i < polaca->cantidadElementosCola; i++) {
+		procesarElementoPolaca(polaca->elementos[i]);
+	}
+
+	fprintf(fuenteASM,"\n; --- Fin de programa principal ---\n\n");
+}
+
+void procesarElementoPolaca(struct elementoPolaca elemento) {
+	if(elemento.tipo == 'o') { // Es operador
+		agregarOperacion(elemento);			
+	} else { // Es operando
+		agregarOperandoColaDesdePolaca(elemento);
+	}
+}
+
 void agregarOperacion(struct elementoPolaca operador) {
 	if(!compareCaseInsensitive(operador.elemento, "=")) {
 		asignacionASM();
@@ -186,9 +209,10 @@ void agregarOperacion(struct elementoPolaca operador) {
 
 void agregarOperandoColaDesdePolaca(struct elementoPolaca operando) {
 	// A la pila se agrega el operando con el nombre que tiene la variable en ASM.
-	strcat(operando.elemento, "_");
-	strcat(operando.elemento, ambito);
-	
+	if(operando.tipo != 'f') {
+		strcat(operando.elemento, "_");
+		strcat(operando.elemento, ambito);
+	}	
 	colaEmpujar(&pilaOperandos, operando, -1);
 }
 
@@ -216,13 +240,15 @@ void asignacionASM() {
 
 void asignacionNumericaASM() {
 	struct elementoPolaca operando;
-	char aux[60];
+	char aux[60], tipoDato;
 
 	agregarAFuenteASM("; Asignacion");
 	agregarAFuenteASM(LIBERAR_COPRO);
 	
 	colaSacar(&pilaOperandos, &operando);  // Saco 1er operando.
-	if(operando.tipo == 'i') {
+	tipoDato = operando.tipo;
+	
+	if(tipoDato == 'i') {
 		strcpy(aux,"FILD ");
 	} else {
 		strcpy(aux,"FLD ");
@@ -232,7 +258,8 @@ void asignacionNumericaASM() {
 	agregarAFuenteASM(aux);
 	
 	colaSacar(&pilaOperandos, &operando); // Saco 2do operando.
-	if(operando.tipo == 'i') {
+	validarOperando(operando, tipoDato);
+	if(tipoDato == 'i') {
 		strcpy(aux,"FISTP ");
 	} else {
 		strcpy(aux,"FSTP ");
@@ -264,7 +291,44 @@ void asignacionStringsASM() {
 }
 
 void sumaASM() {
-
+	struct elementoPolaca operando, operandoAux;
+	char aux[60], tipoDato;
+	
+	agregarAFuenteASM("; Suma");
+	agregarAFuenteASM(LIBERAR_COPRO);
+	
+	colaSacar(&pilaOperandos, &operando); // Saco 1er operando.
+	tipoDato = operando.tipo;
+	
+	if(tipoDato == 'i') {
+		strcpy(aux, "FILD ");
+	} else {
+		strcpy(aux, "FLD ");
+	}
+	strcat(aux, operando.elemento);
+	agregarAFuenteASM(aux);
+	
+	colaSacar(&pilaOperandos, &operando); // Saco 2do operando.
+	validarOperando(operando, tipoDato);
+	
+	if(tipoDato == 'i') {
+		strcpy(aux, "FILD ");
+	} else {
+		strcpy(aux, "FLD ");
+	}
+	strcat(aux, operando.elemento);	
+	agregarAFuenteASM(aux);	
+	agregarAFuenteASM("FADD");
+	
+	if(tipoDato == 'i') {
+		strcpy(aux,"FISTP ");
+	} else {
+		strcpy(aux,"FSTP ");
+	}
+		
+	strcat(aux, "AUX_NUMERO");
+	agregarAFuenteASM(aux);
+	agregarOperandoCola("AUX_NUMERO", tipoDato);
 }
 
 void concatenacionStringsASM() {
@@ -284,17 +348,17 @@ void concatenacionStringsASM() {
 	strcat(aux, operando2.elemento);
 	agregarAFuenteASM(aux);
 	
-	agregarAFuenteASM("MOV DI,OFFSET AUX");
+	agregarAFuenteASM("MOV DI,OFFSET AUX_STRING");
 	agregarAFuenteASM("CALL COPIAR");
 	
 	strcpy(aux, "MOV SI,OFFSET ");
 	strcat(aux, operando1.elemento);
 	agregarAFuenteASM(aux);
 	
-	agregarAFuenteASM("MOV DI,OFFSET AUX");
+	agregarAFuenteASM("MOV DI,OFFSET AUX_STRING");
 	agregarAFuenteASM("CALL CONCAT");
 	
-	agregarOperandoCola("AUX", 's');
+	agregarOperandoCola("AUX_STRING", 's');
 }
 
 void restaASM() {
@@ -352,18 +416,10 @@ void imprimirNumeroEnteroASM() {
 	agregarAFuenteASM(aux);
 }
 
-void generarCodigoMainASM() {
-	fprintf(fuenteASM, "; --- Comienzo de programa principal ---\n\n");
-	fprintf(fuenteASM, "MAIN:\n");
-	fprintf(fuenteASM, "mov AX,@DATA ; Inicializa el segmento de datos\n");
-	fprintf(fuenteASM, "mov DS,AX ;\n\n");
-	
-	for(int i = indiceInicioMain; i < polaca->cantidadElementosCola; i++) {
-		struct elementoPolaca elem = polaca->elementos[i];
-		fprintf(fuenteASM, "- POS: %d - %s (%c)\n", i, elem.elemento, elem.tipo);
+void validarOperando(struct elementoPolaca operando, char tipoDato) {
+	if(operando.tipo != tipoDato) {
+		compilationError("Las operaciones deben hacerse con operandos del mismo tipo");
 	}
-
-	fprintf(fuenteASM,"\n; --- Fin de programa principal ---\n\n");
 }
 
 /* Rutinas estándar */
