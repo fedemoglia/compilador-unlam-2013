@@ -52,6 +52,7 @@ void generarCodigoVariablesASM() {
 	
 	fprintf(fuenteASM,"MAXTEXTSIZE equ %d\n\n", LARGO_MAXIMO_CTE_STRING);
 	fprintf(fuenteASM,"_newline db 0Dh,0Ah,'$'\n");
+	fprintf(fuenteASM,"MSG_PRESIONE_TECLA db 0DH,0AH, \"Presione una tecla para continuar...\",'$'\n");
 	fprintf(fuenteASM,"AUX db MAXTEXTSIZE dup(?),'$'\n");	
 
 	for(int i = 0; i < cantidadElementosTS; i++) {
@@ -66,7 +67,7 @@ void generarCodigoVariablesASM() {
 				switch(elementoTS.tipo) {
 					case 'i': fprintf(fuenteASM, "dd %d\n", elementoTS.valorEntero); break;
 					case 'r': fprintf(fuenteASM, "dd %f\n", elementoTS.valorReal); break;
-					case 's': fprintf(fuenteASM, "db MAXTEXTSIZE \"%s\",'$',%d dup (?)\n", elementoTS.valorString, LARGO_MAXIMO_CTE_STRING - strlen(elementoTS.valorString)); break;
+					case 's': fprintf(fuenteASM, "db \"%s\",'$',%d dup (?)\n", elementoTS.valorString, LARGO_MAXIMO_CTE_STRING - strlen(elementoTS.valorString)); break;
 				}
 			} else { // Si es una variable
 				switch(elementoTS.tipo) {
@@ -93,7 +94,7 @@ void generarCodigoInicioCodigoASM() {
 void generarCodigoFinCodigoASM() {
 	fprintf(fuenteASM, "mov ax, 4C00h ; Termina la ejecución.\n");
 	fprintf(fuenteASM, "int 21h\n");
-	fprintf(fuenteASM, "END ; Final del archivo.\n");
+	fprintf(fuenteASM, "END MAIN; Final del archivo.\n");
 }
 
 void generarCodigoRutinasASM() {
@@ -109,6 +110,7 @@ void generarCodigoRutinasEstandar() {
 	agregarRutinaConcat();
 	agregarRutinaEsperarTecla();
 	agregarRutinaNuevaLinea();
+	agregarRutinaImprimirEntero();
 }
 
 void generarCodigoRutinasUsuario() {
@@ -154,9 +156,9 @@ int buscarFinFuncion(int inicioBusqueda) {
 void generarCodigoRutina(int inicioFuncion, int finFuncion) {
 	for(int i = inicioFuncion; i < finFuncion; i++) {
 		struct elementoPolaca elem = polaca->elementos[i];
-		if(elem.tipo == 'o') { // Es Operando
+		if(elem.tipo == 'o') { // Es operador
 			agregarOperacion(elem);			
-		} else { // Es operador
+		} else { // Es operando
 			agregarOperandoColaDesdePolaca(elem);
 		}
 	}
@@ -177,6 +179,8 @@ void agregarOperacion(struct elementoPolaca operador) {
 		multiplicacionASM();
 	} else if(!compareCaseInsensitive(operador.elemento, "/")) {
 		divisionASM();
+	} else if(!compareCaseInsensitive(operador.elemento, "PRINT")) {
+		imprimirASM();
 	}
 }
 
@@ -288,7 +292,7 @@ void concatenacionStringsASM() {
 	agregarAFuenteASM(aux);
 	
 	agregarAFuenteASM("MOV DI,OFFSET AUX");
-	agregarAFuenteASM("call CONCAT");
+	agregarAFuenteASM("CALL CONCAT");
 	
 	agregarOperandoCola("AUX", 's');
 }
@@ -305,8 +309,52 @@ void divisionASM() {
 
 }
 
+void imprimirASM() {
+	if(esOperacionEntreStrings()) {
+		imprimirStringASM();
+	} else {
+		imprimirNumeroEnteroASM();
+	}	
+}
+
+void imprimirStringASM() {
+	struct elementoPolaca operando;
+	char aux[100];
+	
+	agregarAFuenteASM("; Impresion de string");
+	
+	colaSacar(&pilaOperandos, &operando); // Saco operando.
+	strcpy(aux, "MOV DX, OFFSET ");
+	strcat(aux, operando.elemento);
+	agregarAFuenteASM(aux);
+	
+	strcpy(aux, "MOV AH, 9");
+	agregarAFuenteASM(aux);
+	
+	strcpy(aux, "INT 21h");
+	agregarAFuenteASM(aux);	
+	
+	agregarAFuenteASM("CALL NEWLINE");
+}
+
+void imprimirNumeroEnteroASM() {
+	struct elementoPolaca operando;
+	char aux[100];
+	
+	agregarAFuenteASM("; Impresion de numero");
+	
+	colaSacar(&pilaOperandos, &operando); // Saco operando.
+	strcpy(aux, "MOV eax,");
+	strcat(aux, operando.elemento);	
+	agregarAFuenteASM(aux);
+	
+	strcpy(aux, "CALL IMPRIMIR_ENTERO");	
+	agregarAFuenteASM(aux);
+}
+
 void generarCodigoMainASM() {
-	fprintf(fuenteASM,"; --- Comienzo de programa principal ---\n\n");
+	fprintf(fuenteASM, "; --- Comienzo de programa principal ---\n\n");
+	fprintf(fuenteASM, "MAIN:\n");
 	fprintf(fuenteASM, "mov AX,@DATA ; Inicializa el segmento de datos\n");
 	fprintf(fuenteASM, "mov DS,AX ;\n\n");
 	
@@ -401,7 +449,7 @@ void agregarRutinaEsperarTecla() {
 	"; Rutina ESPERA_TECLA\n"
 	"; A la espera de una tecla\n"
 	"ESPERA_TECLA PROC\n"
-	"	mov dx,OFFSET msgPresione\n"
+	"	mov dx,OFFSET MSG_PRESIONE_TECLA\n"
 	"	mov ah,09\n"
 	"	int 21h\n"
 	"	mov DX, OFFSET _newline\n"
@@ -427,6 +475,38 @@ void agregarRutinaNuevaLinea() {
 	"	ret\n"
 	"NEWLINE ENDP\n\n"
 	);
+}
+
+void agregarRutinaImprimirEntero() {
+   fprintf(fuenteASM,
+		"IMPRIMIR_ENTERO PROC\n"
+		"	push eax\n"
+		"	push ebx\n"
+		"	push ecx\n"
+		"	push edx\n"
+		"	xor	ecx,ecx\n"
+		"	mov	ebx,10d\n"
+		"imp_dec_loop1:\n"
+		"	xor	edx,edx\n"
+		"	div	ebx\n"
+		"	push edx\n"
+		"	inc	ecx\n"
+		"	cmp	eax,0\n"
+		"	jnz	imp_dec_loop1\n"
+		"	mov	ah,02\n"
+		"imp_dec_loop2:\n"
+		"	pop	edx\n"
+		"	add dl,48D\n"
+		"	int	21h\n"
+		"	dec	ecx\n"
+		"	jnz	imp_dec_loop2 \n"
+		"	pop edx\n"
+		"	pop ecx\n"
+		"	pop ebx\n"
+		"	pop eax\n"
+		"	CALL NEWLINE\n"
+		"	ret\n"
+		"IMPRIMIR_ENTERO ENDP\n\n");
 }
 
 void agregarAFuenteASM(char * cadena) {
