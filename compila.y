@@ -262,7 +262,7 @@ void agregarCallAPolacaSiEsFuncion(int);
 void agregarAPolaca(int);
 void escribirTSEnArchivo();
 void setNombreConstante(char *, char *);
-void reemplazarEspacios(char *);
+void reemplazarCaracteresInvalidos(char *);
 void limpiarEspacioPalabraLeida();
 void configurarTipoComparacion (char * tipoComp);
 int cantidadElementosTablaSimbolos=0;
@@ -716,7 +716,7 @@ void finId() {
 }
 
 void initCte() {
-	yylval=NULL;
+	//yylval=NULL;
 	limpiarEspacioPalabraLeida();
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 }
@@ -950,12 +950,14 @@ void escribirTSEnArchivo() {
 void setNombreConstante(char * constante, char * nombreConstante) {
 	strcpy(nombreConstante,"_");
 	strcat(nombreConstante,constante);
-	reemplazarEspacios(nombreConstante);
+	reemplazarCaracteresInvalidos(nombreConstante);
 }
 
-void reemplazarEspacios(char * cadena) {
+void reemplazarCaracteresInvalidos(char * cadena) {
 	for(int i=0; i < strlen(cadena); i++) {
 		if(cadena[i] == ' ') {
+			cadena[i] = '_';
+		} else if(cadena[i] == '.') {
 			cadena[i] = '_';
 		}
 	}
@@ -1003,7 +1005,7 @@ void agregarOperacionAPolaca(char * operacion, int posicion) {
 
 int compareCaseInsensitive(char* cad1, char* cad2) {
 /* WINDOWS */
-//	return strcmpi(cad1,cad2);
+	return strcmpi(cad1,cad2);
 /* LINUX */ 
-	return strcasecmp(cad1,cad2);	
+//	return strcasecmp(cad1,cad2);	
 }
