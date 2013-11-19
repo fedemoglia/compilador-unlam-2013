@@ -240,7 +240,7 @@ void asignacionASM() {
 
 void asignacionNumericaASM() {
 	struct elementoPolaca operando;
-	char aux[60], tipoDato;
+	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;
 
 	agregarAFuenteASM("; Asignacion");
 	agregarAFuenteASM(LIBERAR_COPRO);
@@ -248,23 +248,20 @@ void asignacionNumericaASM() {
 	colaSacar(&pilaOperandos, &operando);  // Saco 1er operando.
 	tipoDato = operando.tipo;
 	
-	if(tipoDato == 'i') {
-		strcpy(aux,"FILD ");
-	} else {
-		strcpy(aux,"FLD ");
-	}
+	// Seteo instrucciones ASM según tipo de dato.
+	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
+	setInstruccionCopiaAMemoriaDesdeCopro(instruccionCopiaMemoria, tipoDato);
 	
+	// Cargo el valor a asignar.
+	strcpy(aux, instruccionCargaCopro);
 	strcat(aux, operando.elemento);		
 	agregarAFuenteASM(aux);
 	
 	colaSacar(&pilaOperandos, &operando); // Saco 2do operando.
 	validarOperando(operando, tipoDato);
-	if(tipoDato == 'i') {
-		strcpy(aux,"FISTP ");
-	} else {
-		strcpy(aux,"FSTP ");
-	}	
 	
+	// Guardo el valor en la variable correspondiente.
+	strcpy(aux, instruccionCopiaMemoria);
 	strcat(aux, operando.elemento);
 	agregarAFuenteASM(aux);	
 }
@@ -277,6 +274,7 @@ void asignacionStringsASM() {
 	
 	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.	
 	colaSacar(&pilaOperandos, &operando2); // Saco 2do operando.
+	validarOperando(operando2, 's');
 	
 	strcpy(aux, "MOV SI,OFFSET ");
 	strcat(aux, operando1.elemento);
@@ -292,7 +290,7 @@ void asignacionStringsASM() {
 
 void sumaASM() {
 	struct elementoPolaca operando, operandoAux;
-	char aux[60], tipoDato;
+	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;
 	
 	agregarAFuenteASM("; Suma");
 	agregarAFuenteASM(LIBERAR_COPRO);
@@ -300,32 +298,28 @@ void sumaASM() {
 	colaSacar(&pilaOperandos, &operando); // Saco 1er operando.
 	tipoDato = operando.tipo;
 	
-	if(tipoDato == 'i') {
-		strcpy(aux, "FILD ");
-	} else {
-		strcpy(aux, "FLD ");
-	}
+	// Seteo instrucciones ASM según tipo de dato.
+	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
+	setInstruccionCopiaAMemoriaDesdeCopro(instruccionCopiaMemoria, tipoDato);
+	
+	// Cargo 1er operando.
+	strcpy(aux, instruccionCargaCopro);
 	strcat(aux, operando.elemento);
 	agregarAFuenteASM(aux);
 	
 	colaSacar(&pilaOperandos, &operando); // Saco 2do operando.
 	validarOperando(operando, tipoDato);
 	
-	if(tipoDato == 'i') {
-		strcpy(aux, "FILD ");
-	} else {
-		strcpy(aux, "FLD ");
-	}
-	strcat(aux, operando.elemento);	
+	// Cargo 2do operando.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando.elemento);		
 	agregarAFuenteASM(aux);	
+	
+	// Ejecuto la suma
 	agregarAFuenteASM("FADD");
 	
-	if(tipoDato == 'i') {
-		strcpy(aux,"FISTP ");
-	} else {
-		strcpy(aux,"FSTP ");
-	}
-		
+	// Guardo el resultado.
+	strcpy(aux, instruccionCopiaMemoria);
 	strcat(aux, "AUX_NUMERO");
 	agregarAFuenteASM(aux);
 	agregarOperandoCola("AUX_NUMERO", tipoDato);
@@ -340,6 +334,7 @@ void concatenacionStringsASM() {
 	
 	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.
 	colaSacar(&pilaOperandos, &operando2); // Saco 2do operando.
+	validarOperando(operando2, 's');
 
 	agregarAFuenteASM("MOV AX, @DATA");
 	agregarAFuenteASM("MOV ES,AX");
@@ -362,15 +357,114 @@ void concatenacionStringsASM() {
 }
 
 void restaASM() {
+	struct elementoPolaca operando1, operando2;
+	char aux[100], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;	
+	
+	agregarAFuenteASM("; Resta");
+	agregarAFuenteASM(LIBERAR_COPRO);
+	
+	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.
+	colaSacar(&pilaOperandos, &operando2); // Saco 2do operando.
+	
+	tipoDato = operando1.tipo;
+	validarOperando(operando2, tipoDato);
+	
+	// Seteo instrucciones ASM según tipo de dato.
+	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
+	setInstruccionCopiaAMemoriaDesdeCopro(instruccionCopiaMemoria, tipoDato);
 
+	// Cargo 2do operando.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando2.elemento);
+	agregarAFuenteASM(aux);
+
+	// Cargo 1er operando.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando1.elemento);
+	agregarAFuenteASM(aux);	
+	
+	// Ejecuto la resta
+	agregarAFuenteASM("FSUB");
+	
+	// Guardo resultado en aux.
+	strcpy(aux, instruccionCopiaMemoria);
+	strcat(aux, "AUX_NUMERO");
+	agregarAFuenteASM(aux);
+	agregarOperandoCola("AUX_NUMERO", tipoDato);	
 }
 
 void multiplicacionASM() {
+	struct elementoPolaca operando;
+	char aux[100], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;	
+	
+	agregarAFuenteASM("; Multiplicacion");	
+	agregarAFuenteASM(LIBERAR_COPRO);	
+	
+	colaSacar(&pilaOperandos, &operando); // Saco 1er operando.
+	tipoDato = operando.tipo;	
+	// Seteo instrucciones ASM según tipo de dato.
+	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
+	setInstruccionCopiaAMemoriaDesdeCopro(instruccionCopiaMemoria, tipoDato);
+	
+	// Cargo 1er operando.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando.elemento);	
+	agregarAFuenteASM(aux);
+		
+	// Cargo 2do operando.
+	colaSacar(&pilaOperandos, &operando);
+	validarOperando(operando, tipoDato);	
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando.elemento);	
+	agregarAFuenteASM(aux);
+	
+	// Ejecuto la multiplicacion.
+	strcpy(aux, "FMUL");
+	agregarAFuenteASM(aux);
 
+	// Guardo el resultado.
+	strcpy(aux, instruccionCopiaMemoria);
+	strcat(aux, "AUX_NUMERO");	
+	agregarAFuenteASM(aux);	
+	agregarOperandoCola("AUX_NUMERO", tipoDato);
 }
 
 void divisionASM() {
+	struct elementoPolaca operando1, operando2;
+	char aux[100], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;	
+	
+	agregarAFuenteASM("; Division");	
+	agregarAFuenteASM(LIBERAR_COPRO);	
+	
+	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.
+	colaSacar(&pilaOperandos, &operando2); // Saco 2do operando.	
+	
+	tipoDato = operando1.tipo;	
+	validarOperando(operando2, tipoDato);
+	
+	// Seteo instrucciones ASM según tipo de dato.
+	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
+	setInstruccionCopiaAMemoriaDesdeCopro(instruccionCopiaMemoria, tipoDato);
+	
+	// Cargo 2do operando.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando2.elemento);	
+	agregarAFuenteASM(aux);
+		
+	// Cargo 1er operando.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando1.elemento);	
+	agregarAFuenteASM(aux);
+	
+	// Ejecuto la multiplicacion.
+	strcpy(aux, "FDIV");
+	agregarAFuenteASM(aux);
 
+	// Guardo el resultado.
+	strcpy(aux, instruccionCopiaMemoria);
+	strcat(aux, "AUX_NUMERO");	
+	agregarAFuenteASM(aux);	
+	agregarOperandoCola("AUX_NUMERO", tipoDato);
 }
 
 void imprimirASM() {
@@ -414,6 +508,22 @@ void imprimirNumeroEnteroASM() {
 	
 	strcpy(aux, "CALL IMPRIMIR_ENTERO");	
 	agregarAFuenteASM(aux);
+}
+
+void setInstruccionCargaDatoEnCopro(char * instruccion, char tipoDato) {
+	if(tipoDato == 'i') {
+		strcpy(instruccion, "FILD ");
+	} else {
+		strcpy(instruccion, "FLD ");
+	}
+}
+
+void setInstruccionCopiaAMemoriaDesdeCopro(char * instruccion, char tipoDato) {
+	if(tipoDato == 'i') {
+		strcpy(instruccion, "FISTP ");
+	} else {
+		strcpy(instruccion, "FSTP ");
+	}
 }
 
 void validarOperando(struct elementoPolaca operando, char tipoDato) {
