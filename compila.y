@@ -117,7 +117,7 @@ asignacion:
 	
 mult_asignacion:
 	expresion
-	| expresion OP_ASIGNACION mult_asignacion { agregarOperacionAPolaca("=",-1); };
+	| expresion OP_ASIGNACION mult_asignacion { agregarOperacionAPolaca(":=",-1); };
 	
 expresion:	
 	termino 
