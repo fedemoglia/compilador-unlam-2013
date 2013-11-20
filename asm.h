@@ -242,7 +242,7 @@ char getTipoDatoPrimerOperandoCola() {
 
 void asignacionASM(int multipleAsignacion) {
 	if(esOperacionEntreStrings()) {
-		asignacionStringsASM(multipleAsignacion);
+		asignacionStringsASM();
 	} else {
 		asignacionNumericaASM(multipleAsignacion);
 	}	
@@ -281,7 +281,7 @@ void asignacionNumericaASM(int multipleAsignacion) {
 	}
 }
 
-void asignacionStringsASM(int multipleAsignacion) {
+void asignacionStringsASM() {
 	struct elementoPolaca operando1, operando2;
 	char aux[60];
 	
