@@ -55,6 +55,7 @@ void generarCodigoVariablesASM() {
 	fprintf(fuenteASM,"MSG_PRESIONE_TECLA db 0DH,0AH, \"Presione una tecla para continuar...\",'$'\n");
 	fprintf(fuenteASM,"AUX_STRING db MAXTEXTSIZE dup(?),'$'\n");	
 	fprintf(fuenteASM, "AUX_NUMERO dd ?\n");
+	fprintf(fuenteASM, "_100 dd 100\n");
 
 	for(int i = 0; i < cantidadElementosTS; i++) {
 		struct elementoTablaSimbolos elementoTS = elementosTS[i];
@@ -204,6 +205,8 @@ void agregarOperacion(struct elementoPolaca operador) {
 		divisionASM();
 	} else if(!compareCaseInsensitive(operador.elemento, "PRINT")) {
 		imprimirASM();
+	} else if(!compareCaseInsensitive(operador.elemento, "PERCENT")) {
+		percentASM();
 	}
 }
 
@@ -228,6 +231,10 @@ int esOperacionEntreStrings() {
 	} else {
 		return 0;
 	}
+}
+
+char getTipoDatoPrimerOperandoCola() {
+	return pilaOperandos.elementos[pilaOperandos.cantidadElementosCola - 1].tipo;
 }
 
 void asignacionASM() {
@@ -508,6 +515,18 @@ void imprimirNumeroEnteroASM() {
 	
 	strcpy(aux, "CALL IMPRIMIR_ENTERO");	
 	agregarAFuenteASM(aux);
+}
+
+void percentASM() {
+	char tipoDato;
+	tipoDato = getTipoDatoPrimerOperandoCola();
+	
+	agregarAFuenteASM("; Percent");	
+	// Multiplico operando1 con operando2.
+	multiplicacionASM();
+	agregarOperandoCola("_100", tipoDato);
+	// Divido el resultado de la multiplicación por 100.
+	divisionASM();	
 }
 
 void setInstruccionCargaDatoEnCopro(char * instruccion, char tipoDato) {

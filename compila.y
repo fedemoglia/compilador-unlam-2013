@@ -104,8 +104,7 @@ sentencia:
 	asignacion
 	| condicional
 	| bucle
-	| output
-	| porcentaje;
+	| output;
 	
 grupo_variables:
 	ID_VAR 
@@ -136,7 +135,8 @@ factor:
 	P_ABRE expresion P_CIERRE 
 	| constante_numerica {agregarAPolaca($1);}
 	| ID_VAR {agregarAPolaca($1); agregarCallAPolacaSiEsFuncion($1);} 
-	| CONST_STRING {agregarAPolaca($1);};
+	| CONST_STRING {agregarAPolaca($1);}
+	| porcentaje;
 	
 bucle:
 	I_BUCLE  { apilarPosicionCondicionalWhile();} condicion {agregarSaltoIncondicionalOR();} lista_sentencias I_FINBUCLE {  
