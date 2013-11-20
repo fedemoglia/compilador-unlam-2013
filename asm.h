@@ -1,6 +1,8 @@
 #define FILE_FUENTE "fuente.asm"
 
 // FIXME Estamos definiendo dos veces las constantes!
+#define TRUE 1
+#define FALSE 0
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
 #define LARGO_MAXIMO_CTE_STRING 30
 
@@ -157,12 +159,7 @@ int buscarFinFuncion(int inicioBusqueda) {
 
 void generarCodigoRutina(int inicioFuncion, int finFuncion) {
 	for(int i = inicioFuncion; i < finFuncion; i++) {
-		struct elementoPolaca elem = polaca->elementos[i];
-		if(elem.tipo == 'o') { // Es operador
-			agregarOperacion(elem);			
-		} else { // Es operando
-			agregarOperandoColaDesdePolaca(elem);
-		}
+		procesarElementoPolaca(polaca->elementos[i]);
 	}
 }
 
@@ -184,13 +181,16 @@ void procesarElementoPolaca(struct elementoPolaca elemento) {
 	if(elemento.tipo == 'o') { // Es operador
 		agregarOperacion(elemento);			
 	} else { // Es operando
+		formatearNombreOperandoASM(&elemento);
 		agregarOperandoColaDesdePolaca(elemento);
 	}
 }
 
 void agregarOperacion(struct elementoPolaca operador) {
 	if(!compareCaseInsensitive(operador.elemento, "=")) {
-		asignacionASM();
+		asignacionASM(FALSE);		
+	} else if (!compareCaseInsensitive(operador.elemento, ":=")) {
+		asignacionASM(TRUE);		
 	} else if(!compareCaseInsensitive(operador.elemento, "+")) {
 		if(esOperacionEntreStrings()) {
 			concatenacionStringsASM();
@@ -210,12 +210,15 @@ void agregarOperacion(struct elementoPolaca operador) {
 	}
 }
 
-void agregarOperandoColaDesdePolaca(struct elementoPolaca operando) {
+void formatearNombreOperandoASM(struct elementoPolaca * operando) {
 	// A la pila se agrega el operando con el nombre que tiene la variable en ASM.
-	if(operando.tipo != 'f') {
-		strcat(operando.elemento, "_");
-		strcat(operando.elemento, ambito);
-	}	
+	if(operando->tipo != 'f') {
+		strcat(operando->elemento, "_");
+		strcat(operando->elemento, ambito);
+	}
+}
+
+void agregarOperandoColaDesdePolaca(struct elementoPolaca operando) {
 	colaEmpujar(&pilaOperandos, operando, -1);
 }
 
@@ -237,15 +240,15 @@ char getTipoDatoPrimerOperandoCola() {
 	return pilaOperandos.elementos[pilaOperandos.cantidadElementosCola - 1].tipo;
 }
 
-void asignacionASM() {
+void asignacionASM(int multipleAsignacion) {
 	if(esOperacionEntreStrings()) {
-		asignacionStringsASM();
+		asignacionStringsASM(multipleAsignacion);
 	} else {
-		asignacionNumericaASM();
+		asignacionNumericaASM(multipleAsignacion);
 	}	
 }
 
-void asignacionNumericaASM() {
+void asignacionNumericaASM(int multipleAsignacion) {
 	struct elementoPolaca operando;
 	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;
 
@@ -271,9 +274,14 @@ void asignacionNumericaASM() {
 	strcpy(aux, instruccionCopiaMemoria);
 	strcat(aux, operando.elemento);
 	agregarAFuenteASM(aux);	
+	
+	// Si hay una asignación múltiple necesito cargar el último operando nuevamente en la cola.
+	if(multipleAsignacion == 1) {
+		agregarOperandoColaDesdePolaca(operando);
+	}
 }
 
-void asignacionStringsASM() {
+void asignacionStringsASM(int multipleAsignacion) {
 	struct elementoPolaca operando1, operando2;
 	char aux[60];
 	
