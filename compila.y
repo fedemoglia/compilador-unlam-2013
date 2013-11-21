@@ -98,7 +98,7 @@ retorno_funcion:
 	FIN_FUNCION cadena_caracteres | FIN_FUNCION constante_numerica;
 	
 declaracion_funcion:
-	ID_VAR {agregarAPolaca($1);} SEPARADOR_DEC tipo;
+	ID_VAR {agregarAPolaca($1);} SEPARADOR_DEC tipo {agregarTipoDeDatoAFuncion();};
 	
 sentencia:	
 	asignacion
@@ -265,6 +265,8 @@ void setNombreConstante(char *, char *);
 void reemplazarCaracteresInvalidos(char *);
 void limpiarEspacioPalabraLeida();
 void configurarTipoComparacion (char * tipoComp);
+void agregarTipoDeDatoAFuncion();
+
 int cantidadElementosTablaSimbolos=0;
 struct elementoTablaSimbolos tablaSimbolos[1000];
 colaPolaca polacaInv;
@@ -473,6 +475,11 @@ void configurarTipoVariableDeclarada(int idTokenTipoVariable) {
 
 void configurarTipoComparacion (char * tipoComp) {
 	strcpy(tipoComparacion,tipoComp);
+}
+
+void agregarTipoDeDatoAFuncion() {
+	tablaSimbolos[cantidadElementosTablaSimbolos - 1].tipoRetorno = tolower(anteriorPalabraLeida[0]);
+	debugMessageString("--- Agregando tipo de retorno a función ", tablaSimbolos[cantidadElementosTablaSimbolos - 1].nombre);
 }
 
 void agregarSaltoFinComparacion(char * operador) {
@@ -938,7 +945,7 @@ void escribirTSEnArchivo() {
 			fprintf(tsFile, "   Tipo: real\n");
 			fprintf(tsFile, "   Valor: %f\n", tablaSimbolos[i].valorReal);
 		} else if(tablaSimbolos[i].tipo == 'f') {
-			fprintf(tsFile, "   Tipo: función\n");
+			fprintf(tsFile, "   Tipo: funcion (Retorno: %c)\n", tablaSimbolos[i].tipoRetorno);
 			fprintf(tsFile, "   Valor: %s\n", tablaSimbolos[i].valorString);
 		}
 		fprintf(tsFile, "   Eliminado: %d\n\n", tablaSimbolos[i].eliminado);
