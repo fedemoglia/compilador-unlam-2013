@@ -540,7 +540,41 @@ void percentASM() {
 }
 
 void ejecutarProcedimientoUsuario() {
+	struct elementoPolaca operando;
+	char aux[60], tipoDato;
+	
+	agregarAFuenteASM("; Llamado a procedimiento de usuario");	
+	colaSacar(&pilaOperandos, &operando); // Saco 1er operando (nombre de la funcion).
+	
+	tipoDato = getTipoDatoRetornoFuncion(operando.elemento);
+	
+	switch(tipoDato) {
+		case 'i': ejecutarProcedimientoRetornoEntero(operando.elemento); break;
+		case 'r': ejecutarProcedimientoRetornoReal(operando.elemento); break;
+		case 's': ejecutarProcedimientoRetornoString(operando.elemento); break;
+	}
+	
+}
 
+void ejecutarProcedimientoRetornoEntero(char * nombreProc) {
+
+}
+
+void ejecutarProcedimientoRetornoReal(char * nombreProc) {
+
+}
+
+void ejecutarProcedimientoRetornoString(char * nombreProc) {
+	char aux[60];
+	
+	strcpy(aux, "MOV DI,OFFSET ");
+	strcat(aux, "AUX_STRING");
+	agregarAFuenteASM(aux);
+	
+	strcpy(aux,"CALL ");
+	strcat(aux, nombreProc);
+	agregarAFuenteASM(aux);
+	agregarOperandoCola("AUX_STRING", 's');
 }
 
 void setInstruccionCargaDatoEnCopro(char * instruccion, char tipoDato) {
