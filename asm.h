@@ -96,7 +96,7 @@ void generarCodigoInicioCodigoASM() {
 }
 
 void generarCodigoFinCodigoASM() {
-	fprintf(fuenteASM, "mov ax, 4C00h ; Termina la ejecución.\n");
+	fprintf(fuenteASM, "MOV ax, 4C00h ; Termina la ejecución.\n");
 	fprintf(fuenteASM, "int 21h\n");
 	fprintf(fuenteASM, "END MAIN; Final del archivo.\n");
 }
@@ -166,8 +166,9 @@ void generarCodigoRutina(int inicioFuncion, int finFuncion) {
 void generarCodigoMainASM() {
 	fprintf(fuenteASM, "; --- Comienzo de programa principal ---\n\n");
 	fprintf(fuenteASM, "MAIN:\n");
-	fprintf(fuenteASM, "mov AX,@DATA ; Inicializa el segmento de datos\n");
-	fprintf(fuenteASM, "mov DS,AX ;\n\n");
+	fprintf(fuenteASM, "MOV AX,@DATA ; Inicializa el segmento de datos\n");
+	fprintf(fuenteASM, "MOV DS,AX ;\n");
+	fprintf(fuenteASM, "MOV ES,AX ;\n\n");
 	strcpy(ambito, "main"); // Seteo ambito en "main".
 	
 	for(int i = indiceInicioMain; i < polaca->cantidadElementosCola; i++) {
@@ -301,7 +302,7 @@ void asignacionStringsASM() {
 	strcat(aux, operando2.elemento);
 	agregarAFuenteASM(aux);
 	
-	strcpy(aux,"CALL copiar");
+	strcpy(aux,"CALL COPIAR");
 	agregarAFuenteASM(aux);
 }
 
