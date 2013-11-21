@@ -6,6 +6,7 @@ struct elementoTablaSimbolos
 	int valorEntero;
 	float valorReal;
 	char valorString[30];
+	char tipoRetorno; /* Solo para funciones */
 	int eliminado;
 };
 

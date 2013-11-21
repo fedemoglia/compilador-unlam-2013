@@ -207,6 +207,8 @@ void agregarOperacion(struct elementoPolaca operador) {
 		imprimirASM();
 	} else if(!compareCaseInsensitive(operador.elemento, "PERCENT")) {
 		percentASM();
+	}  else if(!compareCaseInsensitive(operador.elemento, "CALL")) {
+		ejecutarProcedimientoUsuario();
 	}
 }
 
@@ -237,7 +239,7 @@ int esOperacionEntreStrings() {
 }
 
 char getTipoDatoPrimerOperandoCola() {
-	return pilaOperandos.elementos[pilaOperandos.cantidadElementosCola - 1].tipo;
+	return getTipoDatoOperando(pilaOperandos.elementos[pilaOperandos.cantidadElementosCola - 1]);
 }
 
 void asignacionASM(int multipleAsignacion) {
@@ -256,7 +258,7 @@ void asignacionNumericaASM(int multipleAsignacion) {
 	agregarAFuenteASM(LIBERAR_COPRO);
 	
 	colaSacar(&pilaOperandos, &operando);  // Saco 1er operando.
-	tipoDato = operando.tipo;
+	tipoDato = getTipoDatoOperando(operando);
 	
 	// Seteo instrucciones ASM según tipo de dato.
 	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
@@ -276,7 +278,7 @@ void asignacionNumericaASM(int multipleAsignacion) {
 	agregarAFuenteASM(aux);	
 	
 	// Si hay una asignación múltiple necesito cargar el último operando nuevamente en la cola.
-	if(multipleAsignacion == 1) {
+	if(multipleAsignacion == TRUE) {
 		agregarOperandoColaDesdePolaca(operando);
 	}
 }
@@ -311,7 +313,7 @@ void sumaASM() {
 	agregarAFuenteASM(LIBERAR_COPRO);
 	
 	colaSacar(&pilaOperandos, &operando); // Saco 1er operando.
-	tipoDato = operando.tipo;
+	tipoDato = getTipoDatoOperando(operando);
 	
 	// Seteo instrucciones ASM según tipo de dato.
 	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
@@ -381,7 +383,7 @@ void restaASM() {
 	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.
 	colaSacar(&pilaOperandos, &operando2); // Saco 2do operando.
 	
-	tipoDato = operando1.tipo;
+	tipoDato = getTipoDatoOperando(operando1);
 	validarOperando(operando2, tipoDato);
 	
 	// Seteo instrucciones ASM según tipo de dato.
@@ -416,7 +418,7 @@ void multiplicacionASM() {
 	agregarAFuenteASM(LIBERAR_COPRO);	
 	
 	colaSacar(&pilaOperandos, &operando); // Saco 1er operando.
-	tipoDato = operando.tipo;	
+	tipoDato = getTipoDatoOperando(operando);	
 	// Seteo instrucciones ASM según tipo de dato.
 	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
 	setInstruccionCopiaAMemoriaDesdeCopro(instruccionCopiaMemoria, tipoDato);
@@ -454,7 +456,7 @@ void divisionASM() {
 	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.
 	colaSacar(&pilaOperandos, &operando2); // Saco 2do operando.	
 	
-	tipoDato = operando1.tipo;	
+	tipoDato = getTipoDatoOperando(operando1);	
 	validarOperando(operando2, tipoDato);
 	
 	// Seteo instrucciones ASM según tipo de dato.
@@ -537,6 +539,10 @@ void percentASM() {
 	divisionASM();	
 }
 
+void ejecutarProcedimientoUsuario() {
+
+}
+
 void setInstruccionCargaDatoEnCopro(char * instruccion, char tipoDato) {
 	if(tipoDato == 'i') {
 		strcpy(instruccion, "FILD ");
@@ -554,9 +560,26 @@ void setInstruccionCopiaAMemoriaDesdeCopro(char * instruccion, char tipoDato) {
 }
 
 void validarOperando(struct elementoPolaca operando, char tipoDato) {
-	if(operando.tipo != tipoDato) {
+	char tipoDatoOperando = operando.tipo;
+	if(operando.tipo == 'f') {
+		tipoDatoOperando = getTipoDatoRetornoFuncion(operando.elemento);
+	}
+	if(tipoDatoOperando != tipoDato) {
 		compilationError("Las operaciones deben hacerse con operandos del mismo tipo");
 	}
+}
+
+char getTipoDatoOperando(struct elementoPolaca operando) {
+	char tipoDatoOperando = operando.tipo;
+	if(operando.tipo == 'f') {
+		tipoDatoOperando = getTipoDatoRetornoFuncion(operando.elemento);
+	}
+	return tipoDatoOperando;
+}
+
+char getTipoDatoRetornoFuncion(char * nombreFuncion) {
+	int indiceTS = buscarEnTS("main", nombreFuncion, 'n', elementosTS, cantidadElementosTS);
+	return elementosTS[indiceTS].tipoRetorno;
 }
 
 /* Rutinas estándar */
