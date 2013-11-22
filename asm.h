@@ -135,13 +135,10 @@ void generarCodigoRutinasUsuario() {
 		
 		char nombreFuncion[LARGO_MAXIMO_NOMBRE_TOKEN];
 		strcpy(nombreFuncion, polaca->elementos[indiceInicioFuncion + 1].elemento);
+		strcpy(ambito, nombreFuncion);		
 		
-		fprintf(codigoASM, "%s:\n", nombreFuncion); // Nombre Función				
-
-		strcpy(ambito, nombreFuncion);
-		generarCodigoRutina(indiceInicioFuncion + 2, indiceFinFuncion);
-
-		fprintf(codigoASM, "RET\n\n");
+		generarCodigoRutina(indiceInicioFuncion + 2, indiceFinFuncion, nombreFuncion);
+		
 		indiceInicioFuncion = buscarInicioFuncion(indiceFinFuncion); // Busco en la polaca el inicio de la siguiente función.
 		indiceInicioMain = indiceFinFuncion + 1; // Se setea en una variable global el inicio del main para evitar la declaración de funciones.
 	} 
@@ -165,18 +162,23 @@ int buscarFinFuncion(int inicioBusqueda) {
 	return -1;
 }
 
-void generarCodigoRutina(int inicioFuncion, int finFuncion) {
+void generarCodigoRutina(int inicioFuncion, int finFuncion, char * nombreFuncion) {
+	fprintf(codigoASM, "%s PROC\n", nombreFuncion); // Nombre Función	
+	agregarAcodigoASM("MOV DX,DI");
+
 	for(int i = inicioFuncion; i < finFuncion; i++) {
 		procesarElementoPolaca(polaca->elementos[i]);
 	}
+	
+	fprintf(codigoASM, "%s ENDP\n\n", nombreFuncion);
 }
 
 void generarCodigoMainASM() {
 	fprintf(codigoASM, "; --- Comienzo de programa principal ---\n\n");
 	fprintf(codigoASM, "MAIN:\n");
 	fprintf(codigoASM, "MOV AX,@DATA ; Inicializa el segmento de datos\n");
-	fprintf(codigoASM, "MOV DS,AX ;\n\n");
-	fprintf(fuenteASM, "MOV ES,AX ;\n\n");
+	fprintf(codigoASM, "MOV DS,AX ;\n");
+	fprintf(codigoASM, "MOV ES,AX ;\n\n");
 	strcpy(ambito, "main"); // Seteo ambito en "main".
 	
 	for(int i = indiceInicioMain; i < polaca->cantidadElementosCola; i++) {
@@ -578,19 +580,31 @@ void ejecutarProcedimientoRetornoReal(char * nombreProc) {
 void ejecutarProcedimientoRetornoString(char * nombreProc) {
 	char aux[60];
 	
-	agregarOperandoCola("AUX_STRING", 's');
+	strcpy(aux, "MOV DI,OFFSET ");
+	strcat(aux, "AUX_STRING");
+	agregarAcodigoASM(aux);
 	
 	strcpy(aux,"CALL ");
 	strcat(aux, nombreProc);
 	agregarAcodigoASM(aux);	
+	
+	agregarOperandoCola("AUX_STRING", 's');
 }
 
 void retornoDeFuncionASM() {
 	struct elementoPolaca operando;
-	char aux[100];
+	char aux[60];
 	
 	agregarAcodigoASM("; Retorno de funcion");
-	//asignacionStringsASM();
+	
+	colaSacar(&pilaOperandos, &operando); // Saco operando.
+	strcpy(aux, "MOV SI,OFFSET ");
+	strcat(aux, operando.elemento);
+	agregarAcodigoASM(aux);
+	
+	agregarAcodigoASM("MOV DI,DX");
+	agregarAcodigoASM("CALL COPIAR");
+	agregarAcodigoASM("RET");
 }
 
 void setInstruccionCargaDatoEnCopro(char * instruccion, char tipoDato) {
