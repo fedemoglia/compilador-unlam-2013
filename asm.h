@@ -163,7 +163,7 @@ int buscarFinFuncion(int inicioBusqueda) {
 }
 
 void generarCodigoRutina(int inicioFuncion, int finFuncion, char * nombreFuncion) {
-	fprintf(codigoASM, "%s PROC\n", nombreFuncion); // Nombre Función	
+	fprintf(codigoASM, "%s PROC\n", nombreFuncion); // Nombre Función
 	agregarAcodigoASM("MOV DX,DI");
 
 	for(int i = inicioFuncion; i < finFuncion; i++) {
@@ -570,7 +570,16 @@ void ejecutarProcedimientoUsuarioASM() {
 }
 
 void ejecutarProcedimientoRetornoEntero(char * nombreProc) {
-
+	char aux[60];
+	
+	strcpy(aux,"CALL ");
+	strcat(aux, nombreProc);
+	agregarAcodigoASM(aux);	
+	
+	strcpy(aux, "MOV AUX_NUMERO,AX ");
+	agregarAcodigoASM(aux);
+	
+	agregarOperandoCola("AUX_NUMERO", 'i');
 }
 
 void ejecutarProcedimientoRetornoReal(char * nombreProc) {
@@ -593,9 +602,37 @@ void ejecutarProcedimientoRetornoString(char * nombreProc) {
 
 void retornoDeFuncionASM() {
 	struct elementoPolaca operando;
-	char aux[60];
+	char tipoDato;
 	
 	agregarAcodigoASM("; Retorno de funcion");
+	tipoDato = getTipoDatoRetornoFuncion(ambito); // El ambito es igual al nombre de la función.
+	
+	switch(tipoDato) {
+		case 'i': retornoDeFuncionEntera(); break;
+		case 'r': retornoDeFuncionReal(); break;
+		case 's': retornoDeFuncionString(); break;
+	}
+}
+
+void retornoDeFuncionEntera() {
+	struct elementoPolaca operando;
+	char aux[60];
+	
+	colaSacar(&pilaOperandos, &operando); // Saco operando.
+	strcpy(aux, "MOV AX,");
+	strcat(aux, operando.elemento);
+	agregarAcodigoASM(aux);
+	
+	agregarAcodigoASM("RET");
+}
+
+void retornoDeFuncionReal() {
+
+}
+
+void retornoDeFuncionString() {
+	struct elementoPolaca operando;
+	char aux[60];
 	
 	colaSacar(&pilaOperandos, &operando); // Saco operando.
 	strcpy(aux, "MOV SI,OFFSET ");
