@@ -92,7 +92,7 @@ funcion:
 	declaracion_funcion 
 	bloque_declaraciones 
 	lista_sentencias 
-	retorno_funcion {agregarOperacionAPolaca("FINFUNCION",-1);};
+	retorno_funcion {agregarOperacionAPolaca("return",-1); agregarOperacionAPolaca("FINFUNCION",-1);};
 
 retorno_funcion: 
 	FIN_FUNCION cadena_caracteres | FIN_FUNCION constante_numerica;

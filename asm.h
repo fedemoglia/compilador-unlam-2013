@@ -130,19 +130,18 @@ void generarCodigoRutinasUsuario() {
 	int indiceFinFuncion = -1;
 	
 	indiceInicioFuncion = buscarInicioFuncion(0); // Busco en la polaca el inicio de la primer función.
-	printf("Encontró una función: %d\n\n",indiceInicioFuncion);
 	while(indiceInicioFuncion != -1) {
 		indiceFinFuncion = buscarFinFuncion(indiceInicioFuncion); // Busco en la polaca el fin de la función actual.
-		printf("Fin de la  función: %d\n\n",indiceFinFuncion);
+		
 		char nombreFuncion[LARGO_MAXIMO_NOMBRE_TOKEN];
 		strcpy(nombreFuncion, polaca->elementos[indiceInicioFuncion + 1].elemento);
 		
-		fprintf(codigoASM, "%s PROC\n", nombreFuncion); // Nombre Función				
+		fprintf(codigoASM, "%s:\n", nombreFuncion); // Nombre Función				
 
 		strcpy(ambito, nombreFuncion);
 		generarCodigoRutina(indiceInicioFuncion + 2, indiceFinFuncion);
 
-		fprintf(codigoASM, "%s ENDP\n\n", nombreFuncion);
+		fprintf(codigoASM, "RET\n\n");
 		indiceInicioFuncion = buscarInicioFuncion(indiceFinFuncion); // Busco en la polaca el inicio de la siguiente función.
 		indiceInicioMain = indiceFinFuncion + 1; // Se setea en una variable global el inicio del main para evitar la declaración de funciones.
 	} 
@@ -218,7 +217,9 @@ void agregarOperacion(struct elementoPolaca operador) {
 	} else if(!compareCaseInsensitive(operador.elemento, "PERCENT")) {
 		percentASM();
 	}  else if(!compareCaseInsensitive(operador.elemento, "CALL")) {
-		ejecutarProcedimientoUsuario();
+		ejecutarProcedimientoUsuarioASM();
+	}  else if(!compareCaseInsensitive(operador.elemento, "RETURN")) {
+		retornoDeFuncionASM();
 	}
 }
 
@@ -549,7 +550,7 @@ void percentASM() {
 	divisionASM();	
 }
 
-void ejecutarProcedimientoUsuario() {
+void ejecutarProcedimientoUsuarioASM() {
 	struct elementoPolaca operando;
 	char aux[60], tipoDato;
 	
@@ -577,14 +578,19 @@ void ejecutarProcedimientoRetornoReal(char * nombreProc) {
 void ejecutarProcedimientoRetornoString(char * nombreProc) {
 	char aux[60];
 	
-	strcpy(aux, "MOV DI,OFFSET ");
-	strcat(aux, "AUX_STRING");
-	agregarAcodigoASM(aux);
+	agregarOperandoCola("AUX_STRING", 's');
 	
 	strcpy(aux,"CALL ");
 	strcat(aux, nombreProc);
-	agregarAcodigoASM(aux);
-	agregarOperandoCola("AUX_STRING", 's');
+	agregarAcodigoASM(aux);	
+}
+
+void retornoDeFuncionASM() {
+	struct elementoPolaca operando;
+	char aux[100];
+	
+	agregarAcodigoASM("; Retorno de funcion");
+	//asignacionStringsASM();
 }
 
 void setInstruccionCargaDatoEnCopro(char * instruccion, char tipoDato) {
