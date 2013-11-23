@@ -58,13 +58,27 @@ void generarCodigoCabeceraASM() {
 void generarCodigoVariablesASM() {
 	fprintf(variablesASM,".DATA ; Comienzo de la zona de datos\n\n");
 	
+	generarCodigoVariablesParaUsoGeneral();
+	generarCodigoVariablesDesdeTablaDeSimbolos();
+	
+	fclose(variablesASM);
+}
+
+void generarCodigoVariablesParaUsoGeneral() {	
 	fprintf(variablesASM,"MAXTEXTSIZE equ %d\n\n", LARGO_MAXIMO_CTE_STRING);
 	fprintf(variablesASM,"_newline db 0Dh,0Ah,'$'\n");
 	fprintf(variablesASM,"MSG_PRESIONE_TECLA db 0DH,0AH, \"Presione una tecla para continuar...\",'$'\n");
+	fprintf(variablesASM, "_100 dd 100\n");
+	
+	// FIXME Variables auxiliares (esto se debe reemplazar por las auxiliares generadas dinámicamente).
 	fprintf(variablesASM,"AUX_STRING db MAXTEXTSIZE dup(?),'$'\n");	
 	fprintf(variablesASM, "AUX_NUMERO dd ?\n");
-	fprintf(variablesASM, "_100 dd 100\n");
+	
+	fprintf(variablesASM, "AUX_FUNCION_NUMERO dd ?\n"); // Variable auxiliar para retorno de funciones numéricas.
+	fprintf(variablesASM, "AUX_FUNCION_STRING db MAXTEXTSIZE dup(?),'$'\n");	// Variable auxiliar para retorno de funciones string.
+}
 
+void generarCodigoVariablesDesdeTablaDeSimbolos() {
 	for(int i = 0; i < cantidadElementosTS; i++) {
 		struct elementoTablaSimbolos elementoTS = elementosTS[i];
 
@@ -89,7 +103,6 @@ void generarCodigoVariablesASM() {
 		}				
 	}
 	fprintf(variablesASM,"\n\n");
-	fclose(variablesASM);
 }
 
 void setNombreVariableASM(char * nombreOriginal, char * ambito, char * nombreASM) {
@@ -562,40 +575,34 @@ void ejecutarProcedimientoUsuarioASM() {
 	tipoDato = getTipoDatoRetornoFuncion(operando.elemento);
 	
 	switch(tipoDato) {
-		case 'i': ejecutarProcedimientoRetornoEntero(operando.elemento); break;
-		case 'r': ejecutarProcedimientoRetornoReal(operando.elemento); break;
+		case 'i': ejecutarProcedimientoRetornoNumerico(operando.elemento, 'i'); break;
+		case 'r': ejecutarProcedimientoRetornoNumerico(operando.elemento, 'r'); break;
 		case 's': ejecutarProcedimientoRetornoString(operando.elemento); break;
 	}
 	
 }
 
-void ejecutarProcedimientoRetornoEntero(char * nombreProc) {
+void ejecutarProcedimientoRetornoNumerico(char * nombreProc, char tipoDato) {
 	char aux[60];
 	
 	strcpy(aux,"CALL ");
 	strcat(aux, nombreProc);
-	agregarAcodigoASM(aux);	
-	
-	strcpy(aux, "MOV AUX_NUMERO,AX ");
 	agregarAcodigoASM(aux);
 	
-	agregarOperandoCola("AUX_NUMERO", 'i');
-}
-
-void ejecutarProcedimientoRetornoReal(char * nombreProc) {
-
+	agregarOperandoCola("AUX_NUMERO", tipoDato);
+	agregarOperandoCola("AUX_FUNCION_NUMERO", tipoDato);
+	asignacionNumericaASM(TRUE);
 }
 
 void ejecutarProcedimientoRetornoString(char * nombreProc) {
 	char aux[60];
 	
-	strcpy(aux, "MOV DI,OFFSET ");
-	strcat(aux, "AUX_STRING");
-	agregarAcodigoASM(aux);
-	
 	strcpy(aux,"CALL ");
 	strcat(aux, nombreProc);
-	agregarAcodigoASM(aux);	
+	agregarAcodigoASM(aux);
+	
+	agregarAcodigoASM("MOV SI,OFFSET AUX_FUNCION_STRING");
+	agregarAcodigoASM("MOV DI,OFFSET AUX_STRING");
 	
 	agregarOperandoCola("AUX_STRING", 's');
 }
@@ -608,26 +615,22 @@ void retornoDeFuncionASM() {
 	tipoDato = getTipoDatoRetornoFuncion(ambito); // El ambito es igual al nombre de la función.
 	
 	switch(tipoDato) {
-		case 'i': retornoDeFuncionEntera(); break;
-		case 'r': retornoDeFuncionReal(); break;
+		case 'i': retornoDeFuncionNumerica('i'); break;
+		case 'r': retornoDeFuncionNumerica('r'); break;
 		case 's': retornoDeFuncionString(); break;
 	}
 }
 
-void retornoDeFuncionEntera() {
-	struct elementoPolaca operando;
+void retornoDeFuncionNumerica(char tipoDato) {
+	struct elementoPolaca operandoRetorno;
 	char aux[60];
 	
-	colaSacar(&pilaOperandos, &operando); // Saco operando.
-	strcpy(aux, "MOV AX,");
-	strcat(aux, operando.elemento);
-	agregarAcodigoASM(aux);
+	colaSacar(&pilaOperandos, &operandoRetorno); // Saco operando de retorno.
+	agregarOperandoCola("AUX_FUNCION_NUMERO", tipoDato);	// Agrego operando auxiliar.
+	agregarOperandoColaDesdePolaca(operandoRetorno); // Vuelvo a meter operando de retorno.
+	asignacionNumericaASM(TRUE);
 	
 	agregarAcodigoASM("RET");
-}
-
-void retornoDeFuncionReal() {
-
 }
 
 void retornoDeFuncionString() {
@@ -639,7 +642,7 @@ void retornoDeFuncionString() {
 	strcat(aux, operando.elemento);
 	agregarAcodigoASM(aux);
 	
-	agregarAcodigoASM("MOV DI,DX");
+	agregarAcodigoASM("MOV DI,OFFSET AUX_FUNCION_STRING");
 	agregarAcodigoASM("CALL COPIAR");
 	agregarAcodigoASM("RET");
 }
@@ -836,18 +839,18 @@ void ensamblarArchivoASM(){
 	codigoASM = fopen(FILE_CODIGO, "rt");
 	char buffer[200];
 	fgets(buffer,sizeof(buffer),variablesASM);
-	printf("Ensamblando\n\n");
-	while(!feof(variablesASM))
-	{
+	
+	while(!feof(variablesASM)) {
 		fprintf(fuenteASM,"%s",buffer);
 		fgets(buffer,sizeof(buffer),variablesASM);
 	}
+	
 	fgets(buffer,sizeof(buffer),codigoASM);
-	while(!feof(codigoASM))
-	{
+	while(!feof(codigoASM)) {
 		fprintf(fuenteASM,"%s",buffer);
 		fgets(buffer,sizeof(buffer),codigoASM);
 	}
+	
 	fclose(variablesASM);
 	fclose(codigoASM);
 	fclose(fuenteASM);
