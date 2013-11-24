@@ -19,6 +19,10 @@ struct colaPolaca * polaca;
 struct elementoTablaSimbolos * elementosTS;
 int cantidadElementosTS;
 char ambito[30] = "main";
+int cantVarNumAux = 0;
+int cantVarNumAuxMax = 0;
+char cantVarNumAuxString[3];
+char varNumAux[15] = "AUX_NUMERO_";
 
 int indiceInicioMain = 0;
 
@@ -72,7 +76,6 @@ void generarCodigoVariablesParaUsoGeneral() {
 	
 	// FIXME Variables auxiliares (esto se debe reemplazar por las auxiliares generadas dinámicamente).
 	fprintf(variablesASM,"AUX_STRING db MAXTEXTSIZE dup(?),'$'\n");	
-	fprintf(variablesASM, "AUX_NUMERO dd ?\n");
 	
 	fprintf(variablesASM, "AUX_FUNCION_NUMERO dd ?\n"); // Variable auxiliar para retorno de funciones numéricas.
 	fprintf(variablesASM, "AUX_FUNCION_STRING db MAXTEXTSIZE dup(?),'$'\n");	// Variable auxiliar para retorno de funciones string.
@@ -316,7 +319,7 @@ void asignacionASM(int multipleAsignacion) {
 		asignacionStringsASM(multipleAsignacion);
 	} else {
 		asignacionNumericaASM(multipleAsignacion);
-	}	
+	}
 }
 
 void asignacionNumericaASM(int multipleAsignacion) {
@@ -350,6 +353,10 @@ void asignacionNumericaASM(int multipleAsignacion) {
 	if(multipleAsignacion == TRUE) {
 		agregarOperandoColaDesdePolaca(operando);
 	}
+	if(cantVarNumAux > cantVarNumAuxMax){
+		cantVarNumAuxMax = cantVarNumAux;
+	}
+	cantVarNumAux = 0;
 }
 
 void asignacionStringsASM(int multipleAsignacion) {
@@ -411,9 +418,14 @@ void sumaASM() {
 	
 	// Guardo el resultado.
 	strcpy(aux, instruccionCopiaMemoria);
-	strcat(aux, "AUX_NUMERO");
+	
+	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
+	char nombreVarNumAux [13];
+	generarNombreVarAux(nombreVarNumAux);
+	cantVarNumAux++;
+	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
-	agregarOperandoCola("AUX_NUMERO", tipoDato);
+	agregarOperandoCola(nombreVarNumAux, tipoDato);
 }
 
 
@@ -479,6 +491,12 @@ void saltoASM(char* tipoSalto) {
 
 }
 
+void generarNombreVarAux(char * nombreVarNumAux){
+	strcpy(nombreVarNumAux, varNumAux);
+	itoa(cantVarNumAux,cantVarNumAuxString,10);
+	strcat(nombreVarNumAux, cantVarNumAuxString);
+}
+
 void concatenacionStringsASM() {
 	struct elementoPolaca operando1, operando2;
 	char operador[100], aux[100];
@@ -542,9 +560,13 @@ void restaASM() {
 	
 	// Guardo resultado en aux.
 	strcpy(aux, instruccionCopiaMemoria);
-	strcat(aux, "AUX_NUMERO");
+	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
+	char nombreVarNumAux [13];
+	generarNombreVarAux(nombreVarNumAux);
+	cantVarNumAux++;
+	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
-	agregarOperandoCola("AUX_NUMERO", tipoDato);	
+	agregarOperandoCola(nombreVarNumAux, tipoDato);
 }
 
 void multiplicacionASM() {
@@ -578,9 +600,13 @@ void multiplicacionASM() {
 
 	// Guardo el resultado.
 	strcpy(aux, instruccionCopiaMemoria);
-	strcat(aux, "AUX_NUMERO");	
-	agregarAcodigoASM(aux);	
-	agregarOperandoCola("AUX_NUMERO", tipoDato);
+	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
+	char nombreVarNumAux [13];
+	generarNombreVarAux(nombreVarNumAux);
+	cantVarNumAux++;
+	strcat(aux, nombreVarNumAux);
+	agregarAcodigoASM(aux);
+	agregarOperandoCola(nombreVarNumAux, tipoDato);
 }
 
 void divisionASM() {
@@ -616,9 +642,13 @@ void divisionASM() {
 
 	// Guardo el resultado.
 	strcpy(aux, instruccionCopiaMemoria);
-	strcat(aux, "AUX_NUMERO");	
-	agregarAcodigoASM(aux);	
-	agregarOperandoCola("AUX_NUMERO", tipoDato);
+	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
+	char nombreVarNumAux [13];
+	generarNombreVarAux(nombreVarNumAux);
+	cantVarNumAux++;
+	strcat(aux, nombreVarNumAux);
+	agregarAcodigoASM(aux);
+	agregarOperandoCola(nombreVarNumAux, tipoDato);
 }
 
 void imprimirASM() {
@@ -955,7 +985,11 @@ void ensamblarArchivoASM(){
 		fprintf(fuenteASM,"%s",buffer);
 		fgets(buffer,sizeof(buffer),variablesASM);
 	}
-	
+	int i = 0;
+	//Agrego al archivo final las variables auxiliares para las operaciones numéricas
+	for(i = 0; i< cantVarNumAuxMax; i++){
+		fprintf(fuenteASM, "AUX_NUMERO_%i dd ?\n",i);
+	}
 	fgets(buffer,sizeof(buffer),codigoASM);
 	while(!feof(codigoASM)) {
 		fprintf(fuenteASM,"%s",buffer);
