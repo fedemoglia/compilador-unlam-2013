@@ -133,7 +133,7 @@ termino:
 		
 factor:	
 	P_ABRE expresion P_CIERRE 
-	| constante_numerica {agregarAPolaca($1);}
+	| constante_numerica
 	| ID_VAR {agregarAPolaca($1); agregarCallAPolacaSiEsFuncion($1);} 
 	| CONST_STRING {agregarAPolaca($1);}
 	| porcentaje;
@@ -197,8 +197,8 @@ cadena_caracteres:
 	};
 
 constante_numerica:
-	CONST_REAL
-	| CONST_ENTERA;
+	CONST_REAL {agregarAPolaca($1);}
+	| CONST_ENTERA {agregarAPolaca($1);};
 %%
 
 /***** VARIABLES GLOBALES *****/
