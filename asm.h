@@ -1,4 +1,4 @@
-#define FILE_FUENTE "fuente.asm"
+#define FILE_FUENTE "FINAL.ASM"
 #define FILE_VARIABLES "variables.asm"
 #define FILE_CODIGO "codigo.asm"
 
@@ -1005,9 +1005,9 @@ void ensamblarArchivoASM(){
 	fuenteASM = fopen(FILE_FUENTE, "wt");
 	variablesASM = fopen(FILE_VARIABLES, "rt");
 	codigoASM = fopen(FILE_CODIGO, "rt");
+	//Agrego al archivo final las variables
 	char buffer[200];
 	fgets(buffer,sizeof(buffer),variablesASM);
-	
 	while(!feof(variablesASM)) {
 		fprintf(fuenteASM,"%s",buffer);
 		fgets(buffer,sizeof(buffer),variablesASM);
@@ -1017,12 +1017,13 @@ void ensamblarArchivoASM(){
 	for(i = 0; i< cantVarNumAuxMax; i++){
 		fprintf(fuenteASM, "AUX_NUMERO_%i dd ?\n",i);
 	}
+	fprintf(fuenteASM,"\n\n");
+	//Agrego al archivo final la parte del código
 	fgets(buffer,sizeof(buffer),codigoASM);
 	while(!feof(codigoASM)) {
 		fprintf(fuenteASM,"%s",buffer);
 		fgets(buffer,sizeof(buffer),codigoASM);
 	}
-	fprintf(variablesASM,"\n\n");
 	fclose(variablesASM);
 	fclose(codigoASM);
 	fclose(fuenteASM);
