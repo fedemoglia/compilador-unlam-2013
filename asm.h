@@ -183,7 +183,7 @@ void generarCodigoRutina(int inicioFuncion, int finFuncion, char * nombreFuncion
 	fprintf(codigoASM, "%s PROC\n", nombreFuncion); // Nombre Función
 
 	for(int i = inicioFuncion; i < finFuncion; i++) {
-		procesarElementoPolaca(polaca->elementos[i],i);
+		procesarElementoPolaca(polaca->elementos[i],i,nombreFuncion);
 	}
 	
 	char nombreTag[50];
@@ -202,7 +202,7 @@ void generarCodigoMainASM() {
 	
 	debugMessage("Generando codigo del main");
 	for(int i = indiceInicioMain; i < polaca->cantidadElementosCola; i++) {
-		procesarElementoPolaca(polaca->elementos[i],i);
+		procesarElementoPolaca(polaca->elementos[i],i,"main");
 	}
 	
 	char nombreTag[50];
@@ -212,7 +212,7 @@ void generarCodigoMainASM() {
 	fprintf(codigoASM,"\n; --- Fin de programa principal ---\n\n");
 }
 
-void procesarElementoPolaca(struct elementoPolaca elemento, int indice) {
+void procesarElementoPolaca(struct elementoPolaca elemento, int indice, char* nombreFuncion) {
 	char nombreTag[50];
 	sprintf(nombreTag,"TAG%d_%s:",indice,ambito);
 	agregarAcodigoASM(nombreTag);
@@ -220,7 +220,7 @@ void procesarElementoPolaca(struct elementoPolaca elemento, int indice) {
 	if(elemento.tipo == 'o') { // Es operador
 		agregarOperacion(elemento);			
 	} else { // Es operando		
-		formatearNombreOperandoASM(&elemento);
+		formatearNombreOperandoASM(&elemento, nombreFuncion);
 		agregarOperandoColaDesdePolaca(elemento);
 	}
 }
@@ -259,12 +259,19 @@ void agregarOperacion(struct elementoPolaca operador) {
 		
 }
 
-void formatearNombreOperandoASM(struct elementoPolaca * operando) {
+void formatearNombreOperandoASM(struct elementoPolaca * operando, char* nombreFuncion) {
 	// A la pila se agrega el operando con el nombre que tiene la variable en ASM.
 	if(operando->tipo != 'f') {
+		char* ambito = (char*)getAmbitoVariable(operando->elemento, nombreFuncion);
 		strcat(operando->elemento, "_");
 		strcat(operando->elemento, ambito);
 	}
+}
+
+char* getAmbitoVariable(char * nombre, char* nombreFuncion) {
+	//printf("Buscando funcion %s nombre %s",nombreFuncion,nombre);
+	int indiceTS = buscarEnTS(nombreFuncion, nombre, 'n', elementosTS, cantidadElementosTS);
+	return elementosTS[indiceTS].ambito;
 }
 
 void agregarOperandoColaDesdePolaca(struct elementoPolaca operando) {	
