@@ -146,12 +146,12 @@ void generarCodigoRutinasUsuario() {
 	int indiceFinFuncion = -1;
 	
 	indiceInicioFuncion = buscarInicioFuncion(0); // Busco en la polaca el inicio de la primer función.
-	while(indiceInicioFuncion != -1) {
+	while(indiceInicioFuncion != -1) {		
 		indiceFinFuncion = buscarFinFuncion(indiceInicioFuncion); // Busco en la polaca el fin de la función actual.
 		
 		char nombreFuncion[LARGO_MAXIMO_NOMBRE_TOKEN];
 		strcpy(nombreFuncion, polaca->elementos[indiceInicioFuncion + 1].elemento);
-		strcpy(ambito, nombreFuncion);		
+		strcpy(ambito, nombreFuncion);			
 		
 		generarCodigoRutina(indiceInicioFuncion + 2, indiceFinFuncion, nombreFuncion);
 		
@@ -179,11 +179,18 @@ int buscarFinFuncion(int inicioBusqueda) {
 }
 
 void generarCodigoRutina(int inicioFuncion, int finFuncion, char * nombreFuncion) {
+	debugMessage("Generando codigo de funcion de usuario");
 	fprintf(codigoASM, "%s PROC\n", nombreFuncion); // Nombre Función
 
 	for(int i = inicioFuncion; i < finFuncion; i++) {
 		procesarElementoPolaca(polaca->elementos[i],i);
 	}
+	
+	char nombreTag[50];
+	sprintf(nombreTag,"TAG%d_%s:",polaca->cantidadElementosCola,ambito);
+	agregarAcodigoASM(nombreTag);
+
+	fprintf(codigoASM,"\n; --- Fin de programa principal ---\n\n");
 	
 	fprintf(codigoASM, "%s ENDP\n\n", nombreFuncion);
 }
@@ -196,11 +203,12 @@ void generarCodigoMainASM() {
 	fprintf(codigoASM, "MOV ES,AX ;\n\n");
 	strcpy(ambito, "main"); // Seteo ambito en "main".
 	
+	debugMessage("Generando codigo del main");
 	for(int i = indiceInicioMain; i < polaca->cantidadElementosCola; i++) {
 		procesarElementoPolaca(polaca->elementos[i],i);
 	}
 	
-	char nombreTag[15];
+	char nombreTag[50];
 	sprintf(nombreTag,"TAG%d_%s:",polaca->cantidadElementosCola,ambito);
 	agregarAcodigoASM(nombreTag);
 
@@ -208,14 +216,13 @@ void generarCodigoMainASM() {
 }
 
 void procesarElementoPolaca(struct elementoPolaca elemento, int indice) {
-	char nombreTag[15];
+	char nombreTag[50];
 	sprintf(nombreTag,"TAG%d_%s:",indice,ambito);
 	agregarAcodigoASM(nombreTag);
 
 	if(elemento.tipo == 'o') { // Es operador
 		agregarOperacion(elemento);			
-	} else { // Es operando
-		debugMessageInt("Agregando operador. Largo de cola",pilaOperandos.cantidadElementosCola);
+	} else { // Es operando		
 		formatearNombreOperandoASM(&elemento);
 		agregarOperandoColaDesdePolaca(elemento);
 	}
@@ -263,12 +270,14 @@ void formatearNombreOperandoASM(struct elementoPolaca * operando) {
 	}
 }
 
-void agregarOperandoColaDesdePolaca(struct elementoPolaca operando) {
+void agregarOperandoColaDesdePolaca(struct elementoPolaca operando) {	
 	colaEmpujar(&pilaOperandos, operando, -1);
+	debugMessageInt("Agregando operador. Largo de cola", pilaOperandos.cantidadElementosCola);		
 }
 
-void agregarOperandoCola(char * operando, char tipo) {
+void agregarOperandoCola(char * operando, char tipo) {	
 	polacaAgregar(&pilaOperandos, operando, tipo, -1);
+	debugMessageInt("Agregando operador. Largo de cola", pilaOperandos.cantidadElementosCola);		
 }
 
 int esOperacionEntreStrings() {
@@ -335,6 +344,7 @@ void asignacionNumericaASM(int multipleAsignacion) {
 	struct elementoPolaca operando;
 	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;
 
+	debugMessage("Generando codigo para asignacion numerica");
 	agregarAcodigoASM("; Asignacion");
 	agregarAcodigoASM(LIBERAR_COPRO);
 	
@@ -372,6 +382,7 @@ void asignacionStringsASM(int multipleAsignacion) {
 	struct elementoPolaca operando1, operando2;
 	char aux[60];
 	
+	debugMessage("Generando codigo para asignacion de strings");
 	agregarAcodigoASM("; Asignacion strings");
 	
 	colaSacar(&pilaOperandos, &operando1); // Saco 1er operando.	
@@ -399,6 +410,7 @@ void sumaASM() {
 	struct elementoPolaca operando, operandoAux;
 	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;
 	
+	debugMessage("Generando codigo para suma");
 	agregarAcodigoASM("; Suma");
 	agregarAcodigoASM(LIBERAR_COPRO);
 	
@@ -442,6 +454,7 @@ void comparacionASM() {
 	struct elementoPolaca operando, operandoAux;
 	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;
 	
+	debugMessage("Procesando comparacion");
 	agregarAcodigoASM("; Comparación");
 	agregarAcodigoASM(LIBERAR_COPRO);
 	
@@ -484,6 +497,7 @@ void saltoASM(char* tipoSalto) {
 	char operacion[50];
 	char nombreTag[30];
 	
+	debugMessage("Generando codigo para salto");
 	struct elementoPolaca operando;
 	colaSacar(&pilaOperandos, &operando); 
 	
@@ -510,6 +524,7 @@ void concatenacionStringsASM() {
 	struct elementoPolaca operando1, operando2;
 	char operador[100], aux[100];
 
+	debugMessage("Generando codigo para concatenacion de strings");
 	strcpy(aux,"; Concatenacion strings");
 	agregarAcodigoASM(aux);
 	
@@ -541,6 +556,7 @@ void restaASM() {
 	struct elementoPolaca operando1, operando2;
 	char aux[100], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;	
 	
+	debugMessage("Generando codigo para resta");
 	agregarAcodigoASM("; Resta");
 	agregarAcodigoASM(LIBERAR_COPRO);
 	
@@ -582,6 +598,7 @@ void multiplicacionASM() {
 	struct elementoPolaca operando;
 	char aux[100], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;	
 	
+	debugMessage("Generando codigo para multiplicacion");
 	agregarAcodigoASM("; Multiplicacion");	
 	agregarAcodigoASM(LIBERAR_COPRO);	
 	
@@ -622,6 +639,7 @@ void divisionASM() {
 	struct elementoPolaca operando1, operando2;
 	char aux[100], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;	
 	
+	debugMessage("Generando codigo para division");
 	agregarAcodigoASM("; Division");	
 	agregarAcodigoASM(LIBERAR_COPRO);	
 	
@@ -678,6 +696,7 @@ void imprimirStringASM() {
 	struct elementoPolaca operando;
 	char aux[100];
 	
+	debugMessage("Generando codigo para impresion de strings");
 	agregarAcodigoASM("; Impresion de string");
 	
 	colaSacar(&pilaOperandos, &operando); // Saco operando.
@@ -698,6 +717,7 @@ void imprimirNumeroEnteroASM() {
 	struct elementoPolaca operando;
 	char aux[100];
 	
+	debugMessage("Generando codigo para impresion de enteros");
 	agregarAcodigoASM("; Impresion de numero");
 	
 	colaSacar(&pilaOperandos, &operando); // Saco operando.
@@ -715,6 +735,7 @@ void percentASM() {
 	char tipoDato;
 	tipoDato = getTipoDatoPrimerOperandoCola();
 	
+	debugMessage("Generando codigo para funcion percent");
 	agregarAcodigoASM("; Percent");	
 	// Multiplico operando1 con operando2.
 	multiplicacionASM();
@@ -749,6 +770,7 @@ void ejecutarProcedimientoUsuarioASM() {
 void ejecutarProcedimientoRetornoNumerico(char * nombreProc, char tipoDato) {
 	char aux[60];
 	
+	debugMessage("Llamado a funcion de usuario con retorno numerico");
 	strcpy(aux,"CALL ");
 	strcat(aux, nombreProc);
 	agregarAcodigoASM(aux);
@@ -764,6 +786,7 @@ void ejecutarProcedimientoRetornoNumerico(char * nombreProc, char tipoDato) {
 void ejecutarProcedimientoRetornoString(char * nombreProc) {
 	char aux[60];
 	
+	debugMessage("Llamado a funcion de usuario con retorno string");
 	strcpy(aux,"CALL ");
 	strcat(aux, nombreProc);
 	agregarAcodigoASM(aux);
@@ -793,10 +816,11 @@ void retornoDeFuncionNumerica(char tipoDato) {
 	struct elementoPolaca operandoRetorno;
 	char aux[60];
 	
+	debugMessage("Retorno de funcion de usuario con retorno numerico");
 	colaSacar(&pilaOperandos, &operandoRetorno); // Saco operando de retorno.
-	agregarOperandoCola("AUX_FUNCION_NUMERO", tipoDato);	// Agrego operando auxiliar.
+	agregarOperandoCola("AUX_FUNCION_NUMERO", tipoDato); // Agrego operando auxiliar.
 	agregarOperandoColaDesdePolaca(operandoRetorno); // Vuelvo a meter operando de retorno.
-	asignacionNumericaASM(TRUE);
+	asignacionNumericaASM(FALSE);
 	
 	agregarAcodigoASM("RET");
 }
@@ -805,6 +829,7 @@ void retornoDeFuncionString() {
 	struct elementoPolaca operando;
 	char aux[60];
 	
+	debugMessage("Retorno de funcion de usuario con retorno string");
 	colaSacar(&pilaOperandos, &operando); // Saco operando.
 	strcpy(aux, "MOV SI,OFFSET ");
 	strcat(aux, operando.elemento);
