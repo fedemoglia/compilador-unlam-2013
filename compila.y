@@ -197,8 +197,8 @@ cadena_caracteres:
 	};
 
 constante_numerica:
-	CONST_REAL {agregarAPolaca($1);}
-	| CONST_ENTERA {agregarAPolaca($1);};
+	CONST_REAL
+	| CONST_ENTERA;
 %%
 
 /***** VARIABLES GLOBALES *****/
