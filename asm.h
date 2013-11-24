@@ -105,7 +105,6 @@ void generarCodigoVariablesDesdeTablaDeSimbolos() {
 			}			
 		}				
 	}
-	fprintf(variablesASM,"\n\n");
 }
 
 void setNombreVariableASM(char * nombreOriginal, char * ambito, char * nombreASM) {
@@ -998,7 +997,7 @@ void ensamblarArchivoASM(){
 		fprintf(fuenteASM,"%s",buffer);
 		fgets(buffer,sizeof(buffer),codigoASM);
 	}
-	
+	fprintf(variablesASM,"\n\n");
 	fclose(variablesASM);
 	fclose(codigoASM);
 	fclose(fuenteASM);
