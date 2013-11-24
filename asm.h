@@ -729,8 +729,11 @@ void ejecutarProcedimientoRetornoNumerico(char * nombreProc, char tipoDato) {
 	strcpy(aux,"CALL ");
 	strcat(aux, nombreProc);
 	agregarAcodigoASM(aux);
-	
-	agregarOperandoCola("AUX_NUMERO", tipoDato);
+	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
+	char nombreVarNumAux [13];
+	generarNombreVarAux(nombreVarNumAux);
+	cantVarNumAux++;
+	agregarOperandoCola(nombreVarNumAux, tipoDato);
 	agregarOperandoCola("AUX_FUNCION_NUMERO", tipoDato);
 	asignacionNumericaASM(TRUE);
 }
