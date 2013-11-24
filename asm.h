@@ -73,6 +73,7 @@ void generarCodigoVariablesParaUsoGeneral() {
 	fprintf(variablesASM,"_newline db 0Dh,0Ah,'$'\n");
 	fprintf(variablesASM,"MSG_PRESIONE_TECLA db 0DH,0AH, \"Presione una tecla para continuar...\",'$'\n");
 	fprintf(variablesASM, "_100 dd 100\n");
+	fprintf(variablesASM, "_100_0 dd 100.0\n");
 	
 	// FIXME Variables auxiliares (esto se debe reemplazar por las auxiliares generadas dinámicamente).
 	fprintf(variablesASM,"AUX_STRING db MAXTEXTSIZE dup(?),'$'\n");	
@@ -274,6 +275,16 @@ int esOperacionEntreStrings() {
 	// FIXME Esto me parece horrible como se hace, pero sino tenía que cambiar varias cosas.
 	int indiceUltimoElemento = pilaOperandos.cantidadElementosCola - 1;
 	if(pilaOperandos.elementos[indiceUltimoElemento].tipo == 's') {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+int esOperandoReal() {
+	// FIXME Esto me parece horrible como se hace, pero sino tenía que cambiar varias cosas.
+	int indiceUltimoElemento = pilaOperandos.cantidadElementosCola - 1;
+	if(pilaOperandos.elementos[indiceUltimoElemento].tipo == 'r') {
 		return 1;
 	} else {
 		return 0;
@@ -652,10 +663,16 @@ void divisionASM() {
 void imprimirASM() {
 	if(esOperacionEntreStrings()) {
 		imprimirStringASM();
-	} else {
+	} 
+	else if(esOperandoReal()){
+		/* imprimirNumeroRealASM(); */ /* Momentaneamente, no se imprimen reales */
+	}
+	else {
 		imprimirNumeroEnteroASM();
-	}	
+	}
 }
+
+
 
 void imprimirStringASM() {
 	struct elementoPolaca operando;
@@ -692,6 +709,8 @@ void imprimirNumeroEnteroASM() {
 	agregarAcodigoASM(aux);
 }
 
+
+
 void percentASM() {
 	char tipoDato;
 	tipoDato = getTipoDatoPrimerOperandoCola();
@@ -699,7 +718,13 @@ void percentASM() {
 	agregarAcodigoASM("; Percent");	
 	// Multiplico operando1 con operando2.
 	multiplicacionASM();
-	agregarOperandoCola("_100", tipoDato);
+	
+	if(esOperandoReal()) {
+		agregarOperandoCola("_100_0", tipoDato);
+	}
+	else {
+		agregarOperandoCola("_100", tipoDato);
+	}
 	// Divido el resultado de la multiplicación por 100.
 	divisionASM();	
 }
