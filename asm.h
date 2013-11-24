@@ -188,10 +188,7 @@ void generarCodigoRutina(int inicioFuncion, int finFuncion, char * nombreFuncion
 	
 	char nombreTag[50];
 	sprintf(nombreTag,"TAG%d_%s:",polaca->cantidadElementosCola,ambito);
-	agregarAcodigoASM(nombreTag);
-
-	fprintf(codigoASM,"\n; --- Fin de programa principal ---\n\n");
-	
+	agregarAcodigoASM(nombreTag);	
 	fprintf(codigoASM, "%s ENDP\n\n", nombreFuncion);
 }
 
