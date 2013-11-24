@@ -372,10 +372,8 @@ void asignacionNumericaASM(int multipleAsignacion) {
 	if(multipleAsignacion == TRUE) {
 		agregarOperandoColaDesdePolaca(operando);
 	}
-	if(cantVarNumAux > cantVarNumAuxMax){
-		cantVarNumAuxMax = cantVarNumAux;
-	}
-	cantVarNumAux = 0;
+	
+	reiniciarContadorVariablesAuxiliares();	
 }
 
 void asignacionStringsASM(int multipleAsignacion) {
@@ -443,7 +441,7 @@ void sumaASM() {
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
 	char nombreVarNumAux [13];
 	generarNombreVarAux(nombreVarNumAux);
-	cantVarNumAux++;
+	
 	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
 	agregarOperandoCola(nombreVarNumAux, tipoDato);
@@ -518,6 +516,8 @@ void generarNombreVarAux(char * nombreVarNumAux){
 	strcpy(nombreVarNumAux, varNumAux);
 	itoa(cantVarNumAux,cantVarNumAuxString,10);
 	strcat(nombreVarNumAux, cantVarNumAuxString);
+	
+	cantVarNumAux++;
 }
 
 void concatenacionStringsASM() {
@@ -588,7 +588,7 @@ void restaASM() {
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
 	char nombreVarNumAux [13];
 	generarNombreVarAux(nombreVarNumAux);
-	cantVarNumAux++;
+	
 	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
 	agregarOperandoCola(nombreVarNumAux, tipoDato);
@@ -629,7 +629,7 @@ void multiplicacionASM() {
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
 	char nombreVarNumAux [13];
 	generarNombreVarAux(nombreVarNumAux);
-	cantVarNumAux++;
+	
 	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
 	agregarOperandoCola(nombreVarNumAux, tipoDato);
@@ -672,7 +672,7 @@ void divisionASM() {
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
 	char nombreVarNumAux [13];
 	generarNombreVarAux(nombreVarNumAux);
-	cantVarNumAux++;
+	
 	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
 	agregarOperandoCola(nombreVarNumAux, tipoDato);
@@ -774,13 +774,35 @@ void ejecutarProcedimientoRetornoNumerico(char * nombreProc, char tipoDato) {
 	strcpy(aux,"CALL ");
 	strcat(aux, nombreProc);
 	agregarAcodigoASM(aux);
+	
+	asignarRetornoFuncionNumericaAAuxiliar(tipoDato);
+}
+
+void asignarRetornoFuncionNumericaAAuxiliar(char tipoDato) {
+	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10];
+
+	debugMessage("Generando codigo para asignacion de retorno de funcion numerica");
+	agregarAcodigoASM(LIBERAR_COPRO);	
+	
+	// Seteo instrucciones ASM según tipo de dato.
+	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
+	setInstruccionCopiaAMemoriaDesdeCopro(instruccionCopiaMemoria, tipoDato);
+	
+	// Cargo el valor a asignar.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, "AUX_FUNCION_NUMERO");		
+	agregarAcodigoASM(aux);
+	
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
 	char nombreVarNumAux [13];
 	generarNombreVarAux(nombreVarNumAux);
-	cantVarNumAux++;
+		
+	// Guardo el valor en la variable correspondiente.
+	strcpy(aux, instruccionCopiaMemoria);
+	strcat(aux, nombreVarNumAux);
+	agregarAcodigoASM(aux);	
+	
 	agregarOperandoCola(nombreVarNumAux, tipoDato);
-	agregarOperandoCola("AUX_FUNCION_NUMERO", tipoDato);
-	asignacionNumericaASM(TRUE);
 }
 
 void ejecutarProcedimientoRetornoString(char * nombreProc) {
@@ -877,6 +899,13 @@ char getTipoDatoOperando(struct elementoPolaca operando) {
 char getTipoDatoRetornoFuncion(char * nombreFuncion) {
 	int indiceTS = buscarEnTS("main", nombreFuncion, 'n', elementosTS, cantidadElementosTS);
 	return elementosTS[indiceTS].tipoRetorno;
+}
+
+void reiniciarContadorVariablesAuxiliares() {
+	if(cantVarNumAux > cantVarNumAuxMax){
+		cantVarNumAuxMax = cantVarNumAux;
+	}
+	cantVarNumAux = 0;
 }
 
 /* Rutinas estándar */
