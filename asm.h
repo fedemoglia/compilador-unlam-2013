@@ -270,7 +270,7 @@ char getTipoDatoPrimerOperandoCola() {
 
 void asignacionASM(int multipleAsignacion) {
 	if(esOperacionEntreStrings()) {
-		asignacionStringsASM();
+		asignacionStringsASM(multipleAsignacion);
 	} else {
 		asignacionNumericaASM(multipleAsignacion);
 	}	
@@ -309,7 +309,7 @@ void asignacionNumericaASM(int multipleAsignacion) {
 	}
 }
 
-void asignacionStringsASM() {
+void asignacionStringsASM(int multipleAsignacion) {
 	struct elementoPolaca operando1, operando2;
 	char aux[60];
 	
@@ -329,6 +329,11 @@ void asignacionStringsASM() {
 	
 	strcpy(aux,"CALL COPIAR");
 	agregarAcodigoASM(aux);
+	
+	// Si hay una asignación múltiple necesito cargar el último operando nuevamente en la cola.
+	if(multipleAsignacion == TRUE) {
+		agregarOperandoColaDesdePolaca(operando2);
+	}
 }
 
 void sumaASM() {
