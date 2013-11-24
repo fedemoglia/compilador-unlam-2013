@@ -180,7 +180,7 @@ void generarCodigoRutina(int inicioFuncion, int finFuncion, char * nombreFuncion
 	agregarAcodigoASM("MOV DX,DI");
 
 	for(int i = inicioFuncion; i < finFuncion; i++) {
-		procesarElementoPolaca(polaca->elementos[i]);
+		procesarElementoPolaca(polaca->elementos[i],i);
 	}
 	
 	fprintf(codigoASM, "%s ENDP\n\n", nombreFuncion);
@@ -195,16 +195,25 @@ void generarCodigoMainASM() {
 	strcpy(ambito, "main"); // Seteo ambito en "main".
 	
 	for(int i = indiceInicioMain; i < polaca->cantidadElementosCola; i++) {
-		procesarElementoPolaca(polaca->elementos[i]);
+		procesarElementoPolaca(polaca->elementos[i],i);
 	}
+	
+	char nombreTag[15];
+	sprintf(nombreTag,"TAG%d_%s:",polaca->cantidadElementosCola,ambito);
+	agregarAcodigoASM(nombreTag);
 
 	fprintf(codigoASM,"\n; --- Fin de programa principal ---\n\n");
 }
 
-void procesarElementoPolaca(struct elementoPolaca elemento) {
+void procesarElementoPolaca(struct elementoPolaca elemento, int indice) {
+	char nombreTag[15];
+	sprintf(nombreTag,"TAG%d_%s:",indice,ambito);
+	agregarAcodigoASM(nombreTag);
+
 	if(elemento.tipo == 'o') { // Es operador
 		agregarOperacion(elemento);			
 	} else { // Es operando
+		debugMessageInt("Agregando operador. Largo de cola",pilaOperandos.cantidadElementosCola);
 		formatearNombreOperandoASM(&elemento);
 		agregarOperandoColaDesdePolaca(elemento);
 	}
@@ -235,7 +244,13 @@ void agregarOperacion(struct elementoPolaca operador) {
 		ejecutarProcedimientoUsuarioASM();
 	}  else if(!compareCaseInsensitive(operador.elemento, "RETURN")) {
 		retornoDeFuncionASM();
+	}  else if(!compareCaseInsensitive(operador.elemento, "CMP")) {
+		comparacionASM();
 	}
+	else if(esInstruccionDeSalto(operador.elemento)) {
+		saltoASM(operador.elemento);
+	}
+		
 }
 
 void formatearNombreOperandoASM(struct elementoPolaca * operando) {
@@ -260,6 +275,34 @@ int esOperacionEntreStrings() {
 	if(pilaOperandos.elementos[indiceUltimoElemento].tipo == 's') {
 		return 1;
 	} else {
+		return 0;
+	}
+}
+
+int esInstruccionDeSalto(char* instruccion) {
+	if(!compareCaseInsensitive(instruccion,"JBE")) {
+		return 1;
+	}
+	else if(!compareCaseInsensitive(instruccion,"JB")) {
+		return 1;
+		}
+	else if(!compareCaseInsensitive(instruccion,"JA")) {
+		return 1;
+		}
+	else if(!compareCaseInsensitive(instruccion,"JAE")) {
+		return 1;
+		}
+	else if(!compareCaseInsensitive(instruccion,"JNE")) {
+		return 1;
+		}
+	else if(!compareCaseInsensitive(instruccion,"JE")) {
+		return 1;
+		}
+	else if(!compareCaseInsensitive(instruccion,"JMP")) {
+		return 1;
+	}
+	
+	else {
 		return 0;
 	}
 }
@@ -371,6 +414,69 @@ void sumaASM() {
 	strcat(aux, "AUX_NUMERO");
 	agregarAcodigoASM(aux);
 	agregarOperandoCola("AUX_NUMERO", tipoDato);
+}
+
+
+void comparacionASM() {
+	struct elementoPolaca operando, operandoAux;
+	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;
+	
+	agregarAcodigoASM("; Comparación");
+	agregarAcodigoASM(LIBERAR_COPRO);
+	
+	colaSacar(&pilaOperandos, &operando); // Saco 1er operando.
+	tipoDato = getTipoDatoOperando(operando);
+	
+	// Seteo instrucciones ASM según tipo de dato.
+	setInstruccionCargaDatoEnCopro(instruccionCargaCopro, tipoDato);
+	setInstruccionCopiaAMemoriaDesdeCopro(instruccionCopiaMemoria, tipoDato);
+	
+	// Cargo 1er operando.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando.elemento);
+	agregarAcodigoASM(aux);
+	
+	colaSacar(&pilaOperandos, &operando); // Saco 2do operando.
+	validarOperando(operando, tipoDato);
+	
+	// Cargo 2do operando.
+	strcpy(aux, instruccionCargaCopro);
+	strcat(aux, operando.elemento);		
+	agregarAcodigoASM(aux);	
+	
+	// Ejecuto la suma
+	agregarAcodigoASM("FCOMP");
+	
+	agregarAcodigoASM("PUSH AX");
+	
+	agregarAcodigoASM("FSTSW AX");		
+	agregarAcodigoASM("FWAIT");
+	agregarAcodigoASM("SAHF");
+
+	agregarAcodigoASM("POP AX");
+
+	agregarAcodigoASM(";Fin Comparacion");	
+}
+
+void saltoASM(char* tipoSalto) {
+	
+	char operacion[50];
+	char nombreTag[30];
+	
+	struct elementoPolaca operando;
+	colaSacar(&pilaOperandos, &operando); 
+	
+	strcpy(operacion,tipoSalto);
+	strcat(operacion," ");
+	
+	strcpy(nombreTag,"TAG");
+	strcat(nombreTag,operando.elemento);
+	
+	strcat(operacion,nombreTag);
+	
+	agregarAcodigoASM(operacion);	
+
+
 }
 
 void concatenacionStringsASM() {
