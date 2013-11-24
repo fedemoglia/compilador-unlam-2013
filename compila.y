@@ -24,7 +24,7 @@
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
 #define LARGO_MAXIMO_CTE_STRING 30
 #define CANT_PALABRAS_RESERVADAS 21
-#define TAM_MAX_CTE_REAL 3,4028234*(10^38)
+#define TAM_MAX_CTE_REAL 17014117000000000000000000000000.00
 #define TAM_MAX_CTE_ENTERA 65535
 #define CANT_TIPOS_COMPARACION 6
 
@@ -204,7 +204,7 @@ constante_numerica:
 /***** VARIABLES GLOBALES *****/
 int tokenIdentificado;
 char tokenChar;
-char palabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN]; int indiceLetraPalabraLeida;
+char palabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN*14]; int indiceLetraPalabraLeida;
 char anteriorPalabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN];
 char tipoVariableDeclarada;
 int estado;
@@ -740,7 +740,7 @@ void finCteEntera() {
 	setNombreConstante(palabraLeida, nombreConstante);
 	int valorConstante = atoi(palabraLeida);
 	
-	if(valorConstante <= TAM_MAX_CTE_ENTERA) {	
+	if(valorConstante <= TAM_MAX_CTE_ENTERA) {		
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
@@ -767,7 +767,10 @@ void finCteReal() {
 	setNombreConstante(palabraLeida, nombreConstante);
 	float valorConstante = atof(palabraLeida);
 	
+		
 	if(valorConstante <= TAM_MAX_CTE_REAL) {
+	
+	
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
@@ -781,7 +784,7 @@ void finCteReal() {
 		}	
 		
 		tokenIdentificado = CONST_REAL;
-	} else {
+	} else {		
 		compilationError("La constante real supera el máximo permitido");
 	}
 }
