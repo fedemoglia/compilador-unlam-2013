@@ -521,7 +521,7 @@ void agregarSaltoFinBucle() {
 		int posicionSalto = polacaInv.cantidadElementosCola + 2;
 		char posicionStr[30];
 		sprintf(posicionStr,"%d",posicionSalto);
-		agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
+		agregarPosicionDeSaltoAPolaca(posicionStr,posicionDireccionSalto);
 		cantidadSaltos--;
 		debugMessageString("--- POLACA --- Agregando", posicionStr);
 	}
@@ -530,7 +530,7 @@ void agregarSaltoFinBucle() {
 	pilaExtraer(&pilaSaltos,&posicionPrimerComparacion);
 	sprintf(posicionStr,"%d",posicionPrimerComparacion);
 
-	agregarOperacionAPolaca(posicionStr,-1);
+	agregarPosicionDeSaltoAPolaca(posicionStr,-1);
 	agregarOperacionAPolaca("JMP",-1);	
 }
 
@@ -596,7 +596,7 @@ void llenarCeldasDeSalto(int adicionalACeldaActual) {
 		
 		char posicionStr[30];
 		sprintf(posicionStr,"%d",posicionSalto);
-		agregarOperacionAPolaca(posicionStr,posicionDireccionSalto);
+		agregarPosicionDeSaltoAPolaca(posicionStr,posicionDireccionSalto);
 		cantidadSaltos--;
 		debugMessageString("--- POLACA --- Agregando", posicionStr);
 	}
@@ -1007,6 +1007,13 @@ void agregarOperacionAPolaca(char * operacion, int posicion) {
 	polacaAgregar(&polacaInv,operacion,'o',posicion);
 
 	debugMessageString("--- POLACA --- Agregando",operacion);
+	
+}
+void agregarPosicionDeSaltoAPolaca(char * posicionSalto, int posicion) {
+
+	polacaAgregar(&polacaInv,posicionSalto,'p',posicion);
+
+	debugMessageString("--- POLACA --- Agregando",posicionSalto);
 	
 }
 
