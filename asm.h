@@ -179,7 +179,6 @@ int buscarFinFuncion(int inicioBusqueda) {
 
 void generarCodigoRutina(int inicioFuncion, int finFuncion, char * nombreFuncion) {
 	fprintf(codigoASM, "%s PROC\n", nombreFuncion); // Nombre Función
-	agregarAcodigoASM("MOV DX,DI");
 
 	for(int i = inicioFuncion; i < finFuncion; i++) {
 		procesarElementoPolaca(polaca->elementos[i],i);
@@ -746,6 +745,7 @@ void ejecutarProcedimientoRetornoString(char * nombreProc) {
 	
 	agregarAcodigoASM("MOV SI,OFFSET AUX_FUNCION_STRING");
 	agregarAcodigoASM("MOV DI,OFFSET AUX_STRING");
+	agregarAcodigoASM("CALL COPIAR"); // Copio el retorno desde la variable auxiliar.
 	
 	agregarOperandoCola("AUX_STRING", 's');
 }
