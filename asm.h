@@ -6,7 +6,7 @@
 #define TRUE 1
 #define FALSE 0
 #define LARGO_MAXIMO_NOMBRE_TOKEN 20
-#define LARGO_MAXIMO_CTE_STRING 30
+#define LARGO_MAXIMO_CTE_STRING 31
 
 #define LIBERAR_COPRO "FFREE"
 
@@ -100,7 +100,8 @@ void generarCodigoVariablesDesdeTablaDeSimbolos() {
 				switch(elementoTS.tipo) {
 					case 'i': fprintf(variablesASM, "dd %d\n", elementoTS.valorEntero); break;
 					case 'r': fprintf(variablesASM, "dd %f\n", elementoTS.valorReal); break;
-					case 's': fprintf(variablesASM, "db \"%s\",'$',%d dup (?)\n", elementoTS.valorString, LARGO_MAXIMO_CTE_STRING - strlen(elementoTS.valorString)); break;
+					case 's': fprintf(variablesASM, "db \"%s\",'$',%d dup (?)\n", elementoTS.valorString, LARGO_MAXIMO_CTE_STRING - strlen(elementoTS.valorString));
+					printf("Valor String: %s Longitud %d\n\n",elementoTS.valorString,strlen(elementoTS.valorString));break;
 				}
 			} else { // Si es una variable
 				switch(elementoTS.tipo) {
