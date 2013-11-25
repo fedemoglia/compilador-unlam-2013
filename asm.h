@@ -10,6 +10,8 @@
 
 #define LIBERAR_COPRO "FFREE"
 
+#define CANTIDAD_MAXIMA_FUNCIONES 800
+
 FILE * variablesASM;
 FILE * codigoASM;
 FILE * fuenteASM;
@@ -23,6 +25,9 @@ int cantVarNumAux = 0;
 int cantVarNumAuxMax = 0;
 char cantVarNumAuxString[3];
 char varNumAux[15] = "AUX_NUMERO_";
+
+char nombresFunciones[CANTIDAD_MAXIMA_FUNCIONES][LARGO_MAXIMO_NOMBRE_TOKEN+10];
+int cantidadFunciones=0;
 
 int indiceInicioMain = 0;
 
@@ -145,6 +150,9 @@ void generarCodigoRutinasUsuario() {
 	int indiceInicioFuncion = -1;
 	int indiceFinFuncion = -1;
 	
+	strcpy(nombresFunciones[cantidadFunciones],"main");
+	cantidadFunciones++;
+	
 	indiceInicioFuncion = buscarInicioFuncion(0); // Busco en la polaca el inicio de la primer función.
 	while(indiceInicioFuncion != -1) {		
 		indiceFinFuncion = buscarFinFuncion(indiceInicioFuncion); // Busco en la polaca el fin de la función actual.
@@ -157,6 +165,9 @@ void generarCodigoRutinasUsuario() {
 		
 		indiceInicioFuncion = buscarInicioFuncion(indiceFinFuncion); // Busco en la polaca el inicio de la siguiente función.
 		indiceInicioMain = indiceFinFuncion + 1; // Se setea en una variable global el inicio del main para evitar la declaración de funciones.
+		
+		strcpy(nombresFunciones[cantidadFunciones],nombreFuncion);
+		cantidadFunciones++;
 	} 
 }
 
@@ -346,7 +357,7 @@ void asignacionASM(int multipleAsignacion) {
 
 void asignacionNumericaASM(int multipleAsignacion) {
 	struct elementoPolaca operando;
-	char aux[60], instruccionCargaCopro[10], instruccionCopiaMemoria[10], tipoDato;
+	char aux[180], instruccionCargaCopro[50], instruccionCopiaMemoria[50], tipoDato;
 
 	debugMessage("Generando codigo para asignacion numerica");
 	agregarAcodigoASM("; Asignacion");
@@ -443,8 +454,8 @@ void sumaASM() {
 	strcpy(aux, instruccionCopiaMemoria);
 	
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
-	char nombreVarNumAux [13];
-	generarNombreVarAux(nombreVarNumAux);
+	char nombreVarNumAux [40];
+	generarNombreVarAux(nombreVarNumAux,ambito);
 	
 	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
@@ -508,6 +519,7 @@ void saltoASM(char* tipoSalto) {
 	
 	strcpy(nombreTag,"TAG");
 	strcat(nombreTag,operando.elemento);
+	strcat(nombreTag,ambito);
 	
 	strcat(operacion,nombreTag);
 	
@@ -516,10 +528,12 @@ void saltoASM(char* tipoSalto) {
 
 }
 
-void generarNombreVarAux(char * nombreVarNumAux){
+void generarNombreVarAux(char * nombreVarNumAux, char* ambito){
 	strcpy(nombreVarNumAux, varNumAux);
 	itoa(cantVarNumAux,cantVarNumAuxString,10);
 	strcat(nombreVarNumAux, cantVarNumAuxString);
+	strcat(nombreVarNumAux, "_");
+	strcat(nombreVarNumAux, ambito);
 	
 	cantVarNumAux++;
 }
@@ -590,8 +604,8 @@ void restaASM() {
 	// Guardo resultado en aux.
 	strcpy(aux, instruccionCopiaMemoria);
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
-	char nombreVarNumAux [13];
-	generarNombreVarAux(nombreVarNumAux);
+	char nombreVarNumAux [40];
+	generarNombreVarAux(nombreVarNumAux,ambito);
 	
 	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
@@ -631,8 +645,8 @@ void multiplicacionASM() {
 	// Guardo el resultado.
 	strcpy(aux, instruccionCopiaMemoria);
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
-	char nombreVarNumAux [13];
-	generarNombreVarAux(nombreVarNumAux);
+	char nombreVarNumAux [40];
+	generarNombreVarAux(nombreVarNumAux,ambito);
 	
 	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
@@ -674,8 +688,8 @@ void divisionASM() {
 	// Guardo el resultado.
 	strcpy(aux, instruccionCopiaMemoria);
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
-	char nombreVarNumAux [13];
-	generarNombreVarAux(nombreVarNumAux);
+	char nombreVarNumAux [40];
+	generarNombreVarAux(nombreVarNumAux,ambito);
 	
 	strcat(aux, nombreVarNumAux);
 	agregarAcodigoASM(aux);
@@ -798,8 +812,8 @@ void asignarRetornoFuncionNumericaAAuxiliar(char tipoDato) {
 	agregarAcodigoASM(aux);
 	
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
-	char nombreVarNumAux [13];
-	generarNombreVarAux(nombreVarNumAux);
+	char nombreVarNumAux [40];
+	generarNombreVarAux(nombreVarNumAux,ambito);
 		
 	// Guardo el valor en la variable correspondiente.
 	strcpy(aux, instruccionCopiaMemoria);
@@ -1070,10 +1084,11 @@ void ensamblarArchivoASM(){
 		fprintf(fuenteASM,"%s",buffer);
 		fgets(buffer,sizeof(buffer),variablesASM);
 	}
-	int i = 0;
 	//Agrego al archivo final las variables auxiliares para las operaciones numéricas
-	for(i = 0; i< cantVarNumAuxMax; i++){
-		fprintf(fuenteASM, "AUX_NUMERO_%i dd ?\n",i);
+	for(int j=0; j< cantidadFunciones; j++) {
+		for(int i = 0; i< cantVarNumAuxMax; i++){
+			fprintf(fuenteASM, "AUX_NUMERO_%i_%s dd ?\n",i,nombresFunciones[j]);
+		}
 	}
 	fprintf(fuenteASM,"\n\n");
 	//Agrego al archivo final la parte del código
