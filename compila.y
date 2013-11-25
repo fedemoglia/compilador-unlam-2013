@@ -21,7 +21,7 @@
 
 #define CANTIDAD_ESTADOS 25
 #define CANTIDAD_CARACTERES 20
-#define LARGO_MAXIMO_NOMBRE_TOKEN 20
+#define LARGO_MAXIMO_NOMBRE_TOKEN 30
 #define LARGO_MAXIMO_CTE_STRING 30
 #define CANT_PALABRAS_RESERVADAS 21
 #define TAM_MAX_CTE_REAL 17014117000000000000000000000000.00
@@ -36,10 +36,10 @@
 %token OP_DECLARACION SEPARADOR_DEC FIN_DEC SEPARADOR_LISTA_VARIABLES
 %token OP_COMP_MAYOR OP_COMP_MENOR OP_COMP_MAYOR_IGUAL OP_COMP_MENOR_IGUAL OP_COMP_IGUAL OP_COMP_DISTINTO
 %token OP_LOGICO_PRE OP_LOGICO_AND OP_LOGICO_OR
-%right OP_ASIGNACION I_PROG
+%right OP_ASIGNACION
 %left OP_SUMA OP_RESTA OP_MULTIPLICACION OP_DIVISION
 %token P_ABRE P_CIERRE I_CONDICIONAL I_ELSE I_FINCONDICIONAL I_BUCLE I_FINBUCLE
-%left I_FINPROG
+%token I_PROG I_FINPROG
 %token INI_FUNCION FIN_FUNCION
 %token TIPO_DATO_INT TIPO_DATO_REAL TIPO_DATO_STRING
 %token ID_VAR
@@ -237,7 +237,6 @@ void separadorDec();
 void separadorListaVariables();
 void parentesisAbre();
 void parentesisCierra();
-void opSuma();
 void opResta();
 void opMultiplicacion();
 void opDivision();
@@ -309,7 +308,7 @@ int main(int argc, char *argv[]) {
 	/* En lugar de comentar el código anterior, muevo el puntero de nuevo al inicio del archivo */
 	fseek(fuente,0,SEEK_SET);
 
-    yyparse();
+	yyparse();
 	getchar();
     fclose(fuente);
 
@@ -321,6 +320,7 @@ int main(int argc, char *argv[]) {
 
 int yyerror(char *s) {
 	printf("%s\n", s);
+	exit(1);
 }
 
 int matrizTransicion[CANTIDAD_ESTADOS][CANTIDAD_CARACTERES] = {
@@ -421,7 +421,7 @@ struct {
 
 int determinarColumna(char c) {
 	int columna=-1;
-	if(isprint(c)) columna=0;
+	if(isprint(c) && c !='$') columna=0;
 	if(isdigit(c)) columna=1;
 
 	switch(c) {
@@ -741,8 +741,7 @@ void finCteEntera() {
 	setNombreConstante(palabraLeida, nombreConstante);
 	int valorConstante = atoi(palabraLeida);
 	
-    printf("Valor %d\n\n",valorConstante);
-	if(valorConstante <= TAM_MAX_CTE_ENTERA) {		
+	if(valorConstante <= TAM_MAX_CTE_ENTERA && valorConstante >= 0) {		
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
@@ -801,7 +800,7 @@ void contCadena() {
 }
 
 void finCadena() {
-	debugMessageString("Constante leída leido",palabraLeida);
+	debugMessageString("Constante leída",palabraLeida);
 
 	int tamPalabraLeida = strlen(palabraLeida);
 	if(tamPalabraLeida <= LARGO_MAXIMO_CTE_STRING) {
