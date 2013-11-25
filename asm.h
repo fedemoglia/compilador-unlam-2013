@@ -602,6 +602,15 @@ void restaASM() {
 	// Ejecuto la resta
 	agregarAcodigoASM("FSUB");
 	
+	agregarAcodigoASM("PUSH AX");
+	
+	agregarAcodigoASM("FSTSW AX");		
+	agregarAcodigoASM("FWAIT");
+	agregarAcodigoASM("SAHF");
+
+	agregarAcodigoASM("POP AX");
+
+	
 	// Guardo resultado en aux.
 	strcpy(aux, instruccionCopiaMemoria);
 	//Genero el nombre de la variable auxiliar donde se va a guardar la operación.
@@ -1045,6 +1054,18 @@ void agregarRutinaImprimirEntero() {
 		"	push ebx\n"
 		"	push ecx\n"
 		"	push edx\n"
+		
+		"	cmp eax,0\n"
+		"	jge impr_entero\n"
+		
+		"	mov dl,'-'\n"
+		"	mov ecx,eax\n"
+		"	mov ah,02\n"
+		"	int 21h\n"
+		"	mov eax,ecx\n"
+		"	neg eax\n"
+		
+		"	impr_entero: \n"
 		"	xor	ecx,ecx\n"
 		"	mov	ebx,10d\n"
 		"imp_dec_loop1:\n"
