@@ -27,7 +27,7 @@
 #define TAM_MAX_CTE_REAL 17014117000000000000000000000000.00
 #define TAM_MAX_CTE_ENTERA 65535
 #define CANT_TIPOS_COMPARACION 6
-
+#define FILE_TABLA_SIMBOLOS "TablaSimbolos.txt"
 
 %}
 
@@ -204,7 +204,8 @@ constante_numerica:
 /***** VARIABLES GLOBALES *****/
 int tokenIdentificado;
 char tokenChar;
-char palabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN*14]; int indiceLetraPalabraLeida;
+char palabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN]; 
+int indiceLetraPalabraLeida;
 char anteriorPalabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN];
 char tipoVariableDeclarada;
 int estado;
@@ -420,7 +421,7 @@ struct {
 
 int determinarColumna(char c) {
 	int columna=-1;
-	if(isalpha(c)) columna=0;
+	if(isprint(c)) columna=0;
 	if(isdigit(c)) columna=1;
 
 	switch(c) {
@@ -661,19 +662,19 @@ void limpiarEspacioPalabraLeida() {
 	int i=0;
 	while(i<LARGO_MAXIMO_NOMBRE_TOKEN) {
 		palabraLeida[i++]=0;
-		}
+	}
 }
 
 void initId() {
 	limpiarEspacioPalabraLeida();
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
-	/*debugMessageString("INFO initId: Palabra Leída (temporal)",palabraLeida);*/
+	//debugMessageString("INFO initId: Palabra Leída (temporal)",palabraLeida);
 
 }
 
 void contId() {
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
-	/*debugMessageString("INFO contId: Palabra Leída (temporal)",palabraLeida);*/
+	//debugMessageString("INFO contId: Palabra Leída (temporal)",palabraLeida);
 }
 
 void finId() {
@@ -740,6 +741,7 @@ void finCteEntera() {
 	setNombreConstante(palabraLeida, nombreConstante);
 	int valorConstante = atoi(palabraLeida);
 	
+    printf("Valor %d\n\n",valorConstante);
 	if(valorConstante <= TAM_MAX_CTE_ENTERA) {		
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
@@ -767,10 +769,7 @@ void finCteReal() {
 	setNombreConstante(palabraLeida, nombreConstante);
 	float valorConstante = atof(palabraLeida);
 	
-		
 	if(valorConstante <= TAM_MAX_CTE_REAL) {
-	
-	
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
 		if(indicePalabraEnTablaDeSimbolos==-1) {
@@ -924,7 +923,7 @@ void compilationError(char * mensaje) {
 
 void escribirTSEnArchivo() {
 	FILE *tsFile;
-	if( !(tsFile = fopen("ts.txt","w") ) ) {
+	if( !(tsFile = fopen(FILE_TABLA_SIMBOLOS,"w") ) ) {
 		printf("Error de apertura del archivo de salida de la Tabla de Simbolos...");
 		getchar();
 		exit(0);
@@ -968,6 +967,8 @@ void reemplazarCaracteresInvalidos(char * cadena) {
 		if(cadena[i] == ' ') {
 			cadena[i] = '_';
 		} else if(cadena[i] == '.') {
+			cadena[i] = '_';
+		} else if(!isalnum((int)cadena[i])){
 			cadena[i] = '_';
 		}
 	}

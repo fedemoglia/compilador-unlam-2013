@@ -1,4 +1,5 @@
 #define TAMANIO_COLA 10000
+#define FILE_INTERMEDIA "Intermedia.txt"
 
 struct elementoPolaca {
 	char elemento[40];
@@ -65,7 +66,7 @@ void imprimirCola(colaPolaca * stack) {
 
 void generarArchivoIntermedia (colaPolaca * stack) {
 	FILE * intermedia;
-	if( !(intermedia = fopen("Intermedia.txt","w") ) ) {
+	if( !(intermedia = fopen(FILE_INTERMEDIA,"w") ) ) {
 		printf("Error de apertura del archivo de notacion intermedia...");
 		getchar();
 		exit(0);
