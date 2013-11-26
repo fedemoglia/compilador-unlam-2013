@@ -1,0 +1,39 @@
+begin
+dec
+	int numero, saldo, total
+endec
+main
+	saldo = 5
+	numero = 3
+	##Simple	
+	while (saldo > numero AND saldo + 5 >= 7)
+		print("Dentro del while")
+		if (saldo > 3)
+			print ("El saldo es mayor a 3")
+			if (not saldo > 4)
+				print("El saldo es menor a 4")
+			else
+				print("El saldo es mayor o igual a 4")
+			endif
+		endif
+		saldo = saldo - 1
+	endwhile
+	##Negado
+	while (not saldo != numero)
+		print("Saldo y numero son iguales")
+		while(numero > 0)
+			print("Restando 1 a numero")
+			numero = numero -1
+			print(numero)
+		endwhile
+	endwhile
+	##Con and
+	##while (saldo > numero and total <= saldo)
+	##	print("Hola")
+	##endwhile
+	##Con or
+	##while (saldo > numero or total <= saldo)
+	##	print("Hola")
+	##endwhile
+endmain
+end

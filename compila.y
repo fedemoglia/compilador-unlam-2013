@@ -309,7 +309,7 @@ int main(int argc, char *argv[]) {
 	fseek(fuente,0,SEEK_SET);
 
 	yyparse();
-	getchar();
+	//getchar();
     fclose(fuente);
 
 	escribirTSEnArchivo();
@@ -767,7 +767,7 @@ void finCteReal() {
 	char nombreConstante[tamPalabraLeida+1] ;
 	setNombreConstante(palabraLeida, nombreConstante);
 	float valorConstante = atof(palabraLeida);
-	
+	printf("Valor %f\n\n",valorConstante);
 	if(valorConstante <= TAM_MAX_CTE_REAL) {
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
