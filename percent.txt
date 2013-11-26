@@ -1,0 +1,39 @@
+begin
+	dec
+		int entero1, entero2, entero3
+		real float1, float2, float3
+	endec
+	main
+		##Asignacion multiple
+		float1 = float2 = 25.
+		entero3 = percent (10, 70)
+		##La salida debe mostrar un 7
+		print(entero3)
+		entero1 = 15
+		entero2 = 10
+		entero3 = percent(entero1, entero2)
+		##La salida debe mostrar un 2 (10% de 15)
+		print(entero3)
+		entero3 = percent(entero1, 80)
+		##La salida debe mostrar un 12 (80% de 15)
+		print(entero3)
+		entero3 = percent(50, entero2)
+		##La salida debe mostrar un 5 (10% de 50)
+		print(entero3)
+		entero3 = percent ((entero1 + 5)*3, 10 + entero2)
+		##La salida debe mostrar un 12 (20% de 60)
+		print(entero3)
+		print("Calculo con numeros reales")
+		## Se calcula el 25% de 25 que es 6.25
+		float3 = percent (float1, float2)
+		if(float3 == 6.25)
+			print("Son iguales")
+		else
+			print("Son distintos")
+		endif
+		##Esta comparacion es cierta
+		if(.25 == percent(1.,25.))
+			print("El 25% de 1 es 0.25")
+		endif
+	endmain
+end

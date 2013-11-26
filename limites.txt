@@ -1,0 +1,34 @@
+begin
+	dec
+		int entero
+		real flotante
+		string cadena, palabra
+	endec
+main
+		##Esta sentencia da error por exceso de limite
+		##entero = 999999999999999999999999999
+		entero = 65356
+		print(entero)
+		entero = 0 - entero
+		print(entero)
+		##flotante = 170141170000000000000000000000.00
+		##flotante = 17014117000000000000000000000001.00
+		##flotante = .1
+		##flotante = 1.
+		##flotante = 0.000000000000000000001
+		cadena = "(cadena de treinta caracteres)"
+		print(cadena)
+		##Cadena con caracteres especiales
+		cadena = "hola 1124&%/(!*][@,.chau"
+		print(cadena)
+		cadena = "h"
+		print(cadena)
+		##print("Esta cadena supera el maximo permitido")
+		##Concatenacion de strings
+		cadena = "gan! una casa" + "Hola: "
+		print(cadena)
+		print(palabra)
+		palabra = "123" + cadena
+		print(palabra)
+endmain
+end

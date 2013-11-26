@@ -1,0 +1,53 @@
+ begin
+       dec
+               int i1, i2, i3
+			   string palabra
+       endec        
+       
+       function f1 : int
+               dec
+                       int i
+               endec                
+               i = PERCENT(200, 50) / (2+3)
+       return i ## 10
+       
+       function f2 : int
+               dec
+                       int i1, i2
+               endec                
+               i1 = f1 + 10        ## 60
+               i2 = 3 * (i1 + 5)        ## 195
+               i2 = i1 + 5        ## 65
+		
+       return i2 ## 65
+       
+       function f3 : string
+               dec
+                       string s1
+               endec
+               s1 = "chau"
+       return "hola"
+       
+       main                
+               i1 = f1
+               print(i1)
+               i2 = f2
+               print(i2)
+               print(" ")
+               
+               i3 = f1 + f2 ## Debe dar 115
+
+	       if(i3<100)
+			print("Menor a 100")
+		else
+			print("Mayor a 100")
+		endif
+		if(i3==55)
+			print("Igual a 115")
+		endif
+               
+               print(i3)
+			   palabra = f3
+			   print(palabra)
+       endmain
+end
