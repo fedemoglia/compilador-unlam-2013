@@ -254,6 +254,7 @@ void debugMessageInt(char * , int );
 void debugMessageString(char * , char *);
 void debugMessage(char *);
 void compilationError(char *);
+void compilationErrorString(char *, char *);
 char* encontrarSaltoNegado(char*);
 
 void validarIdVariableNoFuncion(int);
@@ -673,6 +674,9 @@ void initId() {
 }
 
 void contId() {
+	if(indiceLetraPalabraLeida > LARGO_MAXIMO_NOMBRE_TOKEN) {
+		compilationErrorString("El siguiente token supera el maximo tamaño permitido", palabraLeida);
+	}
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 	//debugMessageString("INFO contId: Palabra Leída (temporal)",palabraLeida);
 }
@@ -915,6 +919,13 @@ void debugMessageString(char * cadena, char * string) {
 
 void compilationError(char * mensaje) {
 	printf("ERROR: %s\n", mensaje);
+	puts("La compilación finalizó con errores, presione una tecla para finalizar");
+	system("pause");
+	exit(0);
+}
+
+void compilationErrorString(char * mensaje, char * parametro) {
+	printf("ERROR: %s: %s\n", mensaje, parametro);
 	puts("La compilación finalizó con errores, presione una tecla para finalizar");
 	system("pause");
 	exit(0);
