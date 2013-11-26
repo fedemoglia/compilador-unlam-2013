@@ -1,0 +1,24 @@
+begin
+	dec
+		int valor,aux
+	endec
+
+	function factorial : int
+		valor=valor*aux
+	return valor
+
+	main
+		valor=8
+
+		aux=valor-1
+
+		while(aux>0)
+			valor=factorial
+			aux=aux-1
+		endwhile
+
+		print(valor)
+
+	endmain
+
+end
