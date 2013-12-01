@@ -24,6 +24,8 @@
 #define LARGO_MAXIMO_NOMBRE_TOKEN 30
 #define LARGO_MAXIMO_CTE_STRING 30
 #define CANT_PALABRAS_RESERVADAS 21
+#define LARGO_MAXIMO_CTE_REAL 35
+#define LARGO_MAXIMO_CTE_ENTERA 5
 #define TAM_MAX_CTE_REAL 17014117000000000000000000000000.00
 #define TAM_MAX_CTE_ENTERA 65535
 #define CANT_TIPOS_COMPARACION 6
@@ -204,9 +206,9 @@ constante_numerica:
 /***** VARIABLES GLOBALES *****/
 int tokenIdentificado;
 char tokenChar;
-char palabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN]; 
+char palabraLeida[200]; 
 int indiceLetraPalabraLeida;
-char anteriorPalabraLeida[LARGO_MAXIMO_NOMBRE_TOKEN];
+char anteriorPalabraLeida[200];
 char tipoVariableDeclarada;
 int estado;
 char caracterLeido;
@@ -674,14 +676,14 @@ void initId() {
 }
 
 void contId() {
-	if(indiceLetraPalabraLeida > LARGO_MAXIMO_NOMBRE_TOKEN) {
-		compilationErrorString("El siguiente token supera el maximo tamaño permitido", palabraLeida);
-	}
 	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 	//debugMessageString("INFO contId: Palabra Leída (temporal)",palabraLeida);
 }
 
 void finId() {
+	if(strlen(palabraLeida) > LARGO_MAXIMO_NOMBRE_TOKEN){
+		compilationErrorString("Se excedio el largo maximo de identificador",palabraLeida);
+	}
 	int indicePalabraReservada = verificarPalabraReservada(palabraLeida);
 
 	debugMessageString("--- INFO --- Identificador leido",palabraLeida);
@@ -738,6 +740,9 @@ void contCte() {
 }
 
 void finCteEntera() {
+	if(strlen(palabraLeida) > LARGO_MAXIMO_CTE_ENTERA){
+		compilationErrorString("La constante entera supera el máximo permitido",palabraLeida);
+	}
 	debugMessageString("--- DEBUG --- Constante entera leída",palabraLeida);
 	
 	int tamPalabraLeida = strlen(palabraLeida);
@@ -759,19 +764,20 @@ void finCteEntera() {
 		}	
 		tokenIdentificado = CONST_ENTERA;
 	} else {
-		compilationError("La constante entera supera el máximo permitido");
+		compilationErrorString("La constante entera supera el máximo permitido",palabraLeida);
 	}
 }
 
 void finCteReal() {
-	// FIXME Falta validar el tamaño maximo de una variable real.
+	if(strlen(palabraLeida) > LARGO_MAXIMO_CTE_REAL){
+		compilationErrorString("La constante real supera el máximo permitido",palabraLeida);
+	}
 	debugMessageString("Constante real leída",palabraLeida);
 	
 	int tamPalabraLeida = strlen(palabraLeida);
 	char nombreConstante[tamPalabraLeida+1] ;
 	setNombreConstante(palabraLeida, nombreConstante);
 	float valorConstante = atof(palabraLeida);
-	printf("Valor %f\n\n",valorConstante);
 	if(valorConstante <= TAM_MAX_CTE_REAL) {
 		int indicePalabraEnTablaDeSimbolos = buscarEnTS(ambitoActual,nombreConstante,bloqueDeclaracionesActivo,tablaSimbolos,cantidadElementosTablaSimbolos);
 
@@ -787,7 +793,7 @@ void finCteReal() {
 		
 		tokenIdentificado = CONST_REAL;
 	} else {		
-		compilationError("La constante real supera el máximo permitido");
+		compilationErrorString("La constante real supera el máximo permitido",palabraLeida);
 	}
 }
 
@@ -796,11 +802,7 @@ void initCadena() {
 }
 
 void contCadena() {
-	if(indiceLetraPalabraLeida < LARGO_MAXIMO_CTE_STRING) {
-		palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
-	} else {
-		compilationError("La cadena supera el máximo tamaño aceptado");
-	}
+	palabraLeida[indiceLetraPalabraLeida++] = caracterLeido;
 }
 
 void finCadena() {
@@ -824,7 +826,7 @@ void finCadena() {
 		}
 		tokenIdentificado = CONST_STRING;
 	} else {
-		debugMessageString("Error: La constante %s supera el maximo tamaño de caracteres admitido.",palabraLeida);
+		compilationErrorString("La constante supera el maximo tamaño de caracteres admitido",palabraLeida);
 	}
 }
 
